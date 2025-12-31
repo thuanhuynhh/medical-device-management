@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Hệ thống quản lý thiết bị y tế - Khoa Chẩn đoán hình ảnh",
   "main": "server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"
