@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Lịch sử kiểm tra thiết bị y tế">
+  <title>Lịch sử kiểm tra - Quản lý Thiết bị Y tế</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Navigation (rendered by navbar.js) -->
+    <div id="navbar-container"></div>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="page-header-left">
+            <h1>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+              </svg>
+              Lịch sử Kiểm tra
+            </h1>
+            <p>Xem và theo dõi lịch sử kiểm tra thiết bị</p>
+          </div>
+          <button class="btn btn-primary btn-lg" onclick="location.href='/inspect.html'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+            </svg>
+            Kiểm tra thiết bị
+          </button>
+        </div>
+        
+        <!-- Filters -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="form-row" style="margin-bottom: 16px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Thiết bị</label>
+              <select class="form-control" id="deviceFilter">
+                <option value="">Tất cả thiết bị</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Trạng thái</label>
+              <select class="form-control" id="statusFilter">
+                <option value="">Tất cả trạng thái</option>
+                <option value="good">Tốt</option>
+                <option value="issue">Có vấn đề</option>
+                <option value="critical">Nghiêm trọng</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Từ ngày</label>
+              <input type="date" class="form-control" id="startDate">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Đến ngày</label>
+              <input type="date" class="form-control" id="endDate">
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="loadInspections()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              Tìm kiếm
+            </button>
+            <button class="btn btn-secondary" onclick="resetFilters()">Đặt lại</button>
+            <button class="btn btn-success" onclick="exportReport()" style="margin-left: auto;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Xuất báo cáo
+            </button>
+          </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stat-cards" style="margin-bottom: 20px;">
+          <div class="stat-card">
+            <div class="stat-icon primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <h3 id="totalCount">0</h3>
+              <p>Tổng kiểm tra</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon success">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <h3 id="goodCount">0</h3>
+              <p>Trạng thái tốt</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon warning">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 22h20L12 2z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <circle cx="12" cy="17" r="0.5" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <h3 id="issueCount">0</h3>
+              <p>Có vấn đề</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon danger">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <h3 id="criticalCount">0</h3>
+              <p>Nghiêm trọng</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Table -->
+        <div class="card">
+          <div id="inspectionList">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="/js/app.js"></script>
+  <script src="/js/navbar.js"></script>
+  <script>
+    // Auth - using async verification
+    let isViewer = false;
+    (async function() {
+      const result = await Auth.verify();
+      if (!result.success) {
+        if (result.error === 'account_locked') {
+          alert(result.message);
+        }
+        window.location.href = '/';
+        return;
+      }
+      
+      const user = Auth.user;
+      isViewer = user.role === 'viewer';
+      
+      // Initialize navbar with user
+      Navbar.init(user);
+      
+      // Load data after auth verified
+      loadDevices();
+      loadInspections();
+    })();
+    
+    let allInspections = [];
+    
+    async function loadDevices() {
+      const devices = await DeviceManager.loadDevices();
+      const select = document.getElementById('deviceFilter');
+      devices.forEach(device => {
+        const option = document.createElement('option');
+        option.value = device.id;
+        option.textContent = device.name;
+        select.appendChild(option);
+      });
+    }
+    
+    async function loadInspections() {
+      const params = {};
+      const deviceId = document.getElementById('deviceFilter').value;
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      if (deviceId) params.device_id = deviceId;
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+      
+      if (Auth.user && Auth.user.role === 'inspector') {
+        params.department_id = Auth.user.department_id;
+      }
+      
+      // Viewer can only see their own inspections
+      if (isViewer && Auth.user) {
+        params.user_id = Auth.user.id;
+      }
+      allInspections = await InspectionManager.getInspections(params);
+      renderInspections();
+    }
+    
+    function renderInspections() {
+      const statusFilter = document.getElementById('statusFilter').value;
+      let filtered = allInspections;
+      if (statusFilter) {
+        filtered = allInspections.filter(i => i.status === statusFilter);
+      }
+      updateStats(filtered);
+      const container = document.getElementById('inspectionList');
+      
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <h3>Chưa có dữ liệu kiểm tra</h3>
+            <p>Dữ liệu sẽ hiển thị khi có kiểm tra được ghi nhận</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = `
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Thời gian</th>
+                <th>Thiết bị</th>
+                <th>Vị trí</th>
+                <th>Người kiểm tra</th>
+                <th>Trạng thái</th>
+                <th>Ghi chú</th>
+                <th>Ảnh</th>
+                ${Auth.user && Auth.user.role === 'admin' ? '<th>Thao tác</th>' : ''}
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.map(ins => {
+                const images = ins.images ? (typeof ins.images === 'string' ? JSON.parse(ins.images) : ins.images) : [];
+                return `
+                <tr>
+                  <td style="white-space: nowrap;">${Utils.formatDateTime(ins.inspection_date)}</td>
+                  <td><strong>${ins.device_name}</strong></td>
+                  <td>${ins.device_location || 'N/A'}</td>
+                  <td>${ins.inspector_name}</td>
+                  <td>${InspectionManager.getStatusBadge(ins.status)}</td>
+                  <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${ins.notes || ''}</td>
+                  <td>${images.length > 0 ? images.map(img => `<a href="${img}" target="_blank"><img src="${img}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; margin: 2px;"></a>`).join('') : '-'}</td>
+                  ${Auth.user && Auth.user.role === 'admin' ? `
+                  <td>
+                    <button class="btn btn-icon btn-ghost btn-sm" style="color: var(--danger-color);" onclick="deleteInspection(${ins.id})" title="Xóa">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                      </svg>
+                    </button>
+                  </td>` : ''}
+                </tr>
+              `}).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div style="padding: 12px 16px; text-align: right; color: var(--text-muted); font-size: 0.875rem; border-top: 1px solid var(--border-color);">
+          Hiển thị ${filtered.length} bản ghi
+        </div>
+      `;
+    }
+    
+    async function deleteInspection(id) {
+      if (!confirm('Bạn có chắc muốn xóa bản ghi kiểm tra này?')) return;
+      try {
+        await API.delete(`/api/inspections/${id}`);
+        Toast.success('Đã xóa bản ghi');
+        loadInspections();
+      } catch (error) {
+        Toast.error(error.message || 'Lỗi xóa bản ghi');
+      }
+    }
+    
+    function updateStats(inspections) {
+      document.getElementById('totalCount').textContent = inspections.length;
+      document.getElementById('goodCount').textContent = inspections.filter(i => i.status === 'good').length;
+      document.getElementById('issueCount').textContent = inspections.filter(i => i.status === 'issue').length;
+      document.getElementById('criticalCount').textContent = inspections.filter(i => i.status === 'critical').length;
+    }
+    
+    function resetFilters() {
+      document.getElementById('deviceFilter').value = '';
+      document.getElementById('statusFilter').value = '';
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
+      loadInspections();
+    }
+    
+    function exportReport() {
+      const statusFilter = document.getElementById('statusFilter').value;
+      let filtered = statusFilter ? allInspections.filter(i => i.status === statusFilter) : allInspections;
+      
+      if (filtered.length === 0) {
+        Toast.warning('Không có dữ liệu để xuất');
+        return;
+      }
+      
+      const headers = ['Thời gian', 'Thiết bị', 'Vị trí', 'Người kiểm tra', 'Trạng thái', 'Ghi chú'];
+      const statusLabels = { good: 'Tốt', issue: 'Có vấn đề', critical: 'Nghiêm trọng' };
+      
+      let csv = '\ufeff' + headers.join(',') + '\n';
+      filtered.forEach(ins => {
+        csv += [
+          Utils.formatDateTime(ins.inspection_date),
+          `"${ins.device_name}"`,
+          `"${ins.device_location || ''}"`,
+          `"${ins.inspector_name}"`,
+          statusLabels[ins.status] || ins.status,
+          `"${ins.notes || ''}"`
+        ].join(',') + '\n';
+      });
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bao-cao-kiem-tra-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      Toast.success('Đã xuất báo cáo thành công!');
+    }
+    
+    document.getElementById('statusFilter').addEventListener('change', renderInspections);
+  </script>
+</body>
+</html>

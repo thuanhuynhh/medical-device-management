@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cài đặt - Quản lý Thiết bị Y tế</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Navigation (rendered by navbar.js) -->
+    <div id="navbar-container"></div>
+    
+    <main class="main-content">
+      <div class="container">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h1>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+              </svg>
+              Cài đặt
+            </h1>
+            <p>Quản lý loại thiết bị và báo cáo tự động</p>
+          </div>
+        </div>
+        
+        <div class="dashboard-grid">
+          <!-- Categories -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                  <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+                </svg>
+                Loại Thiết bị
+              </h3>
+              <button class="btn btn-sm btn-primary" onclick="showCategoryModal()">Thêm</button>
+            </div>
+            <div id="categoryList">
+              <div class="loading"><div class="spinner"></div></div>
+            </div>
+          </div>
+          
+          <!-- Departments -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                Khoa Phòng
+              </h3>
+              <button class="btn btn-sm btn-primary" onclick="showDepartmentModal()">Thêm</button>
+            </div>
+            <div id="departmentList">
+              <div class="loading"><div class="spinner"></div></div>
+            </div>
+          </div>
+          
+          <!-- Scheduled Reports -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                Báo cáo tự động Zalo
+              </h3>
+              <button class="btn btn-sm btn-primary" onclick="showScheduleModal()">Thêm</button>
+            </div>
+            <div id="scheduleList">
+              <div class="loading"><div class="spinner"></div></div>
+            </div>
+          </div>
+          
+          <!-- Zalo Bot Status & Token -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                </svg>
+                Zalo Bot
+              </h3>
+            </div>
+            <div id="zaloStatus">
+              <div class="loading"><div class="spinner"></div></div>
+            </div>
+            <hr style="border: none; border-top: 1px solid var(--border-color); margin: 16px 0;">
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">Zalo Bot Token</label>
+              <input type="text" class="form-control" id="zaloToken" placeholder="Nhập token Zalo Bot">
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Token lấy từ Zalo OA Dashboard</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-primary" onclick="saveZaloToken()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                </svg>
+                Lưu Token
+              </button>
+              <button class="btn btn-danger" onclick="disconnectZaloBot()" id="disconnectBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+                Ngắt kết nối
+              </button>
+            </div>
+          </div>
+          
+          <!-- System Configuration -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+                </svg>
+                Cấu hình hệ thống
+              </h3>
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">Domain URL (cho QR Code & Zalo)</label>
+              <input type="text" class="form-control" id="domainUrl" placeholder="https://your-domain.com">
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">URL này sẽ được nhúng vào mã QR và gửi ảnh qua Zalo Bot</p>
+            </div>
+            <button class="btn btn-primary" onclick="saveDomainUrl()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+              </svg>
+              Lưu cấu hình
+            </button>
+          </div>
+          
+          <!-- Branding Settings -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                Thương hiệu
+              </h3>
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">Logo</label>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <img id="logoPreview" src="/images/logo.png" alt="Logo" style="width: 64px; height: 64px; object-fit: contain; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 4px;">
+                <input type="file" id="logoInput" accept="image/*" style="display: none;">
+                <button class="btn btn-secondary" onclick="document.getElementById('logoInput').click()">Chọn ảnh</button>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">Tiêu đề trang</label>
+              <input type="text" class="form-control" id="siteTitle" placeholder="Quản lý Thiết bị Y tế">
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">Phụ đề (hiển thị ở trang đăng nhập)</label>
+              <input type="text" class="form-control" id="siteSubtitle" placeholder="Khoa Chẩn đoán Hình ảnh">
+            </div>
+            <button class="btn btn-primary" onclick="saveBranding()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+              </svg>
+              Lưu thương hiệu
+            </button>
+          </div>
+          
+          <!-- Export -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Xuất dữ liệu
+              </h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <a href="/api/export/devices" class="btn btn-success" download>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                  <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                Xuất danh sách thiết bị (Excel)
+              </a>
+              <a href="/api/export/inspections" class="btn btn-success" download>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                </svg>
+                Xuất lịch sử kiểm tra (Excel)
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="/js/app.js"></script>
+  <script src="/js/navbar.js"></script>
+  <script>
+    // Theme
+    // Auth check - server-side verification
+    (async function() {
+      const result = await Auth.verify();
+      if (!result.success) {
+        if (result.error === 'account_locked') {
+          alert(result.message);
+        }
+        window.location.href = '/';
+        return;
+      }
+      
+      // Check page access - viewer cannot access settings
+      const accessResult = await Auth.checkPageAccess('settings.html');
+      if (!accessResult.allowed) {
+        alert(accessResult.message);
+        window.location.href = '/inspections.html';
+        return;
+      }
+      
+      // Initialize navbar with user
+      Navbar.init(Auth.user);
+      
+      // Load settings data after auth verified
+      loadCategories();
+      loadDepartments();
+      loadSchedules();
+      loadZaloStatus();
+      loadSystemConfig();
+      loadBranding();
+      setInterval(loadZaloStatus, 5000);
+    })();
+    
+    let categories = [];
+    let departments = [];
+    let schedules = [];
+    
+    async function loadCategories() {
+      categories = await API.get('/api/categories');
+      renderCategories();
+    }
+    
+    async function loadSchedules() {
+      schedules = await API.get('/api/schedules');
+      renderSchedules();
+    }
+    
+    async function loadZaloStatus() {
+      const status = await API.get('/api/zalo/status');
+      document.getElementById('zaloStatus').innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="badge ${status.connected ? 'badge-success' : 'badge-danger'}">${status.connected ? 'Đã kết nối' : 'Chưa kết nối'}</span>
+            ${status.bot ? `<span style="color: var(--text-muted);">${status.bot.account_name}</span>` : ''}
+          </div>
+          <div>
+            <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 8px;">Đang nhận thông báo: <strong>${status.subscribers.length}</strong> người</p>
+            ${status.subscribers.length > 0 ? `<code style="font-size: 0.75rem; background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px;">${status.subscribers.join(', ')}</code>` : ''}
+          </div>
+        </div>
+      `;
+    }
+    
+    async function loadSystemConfig() {
+      try {
+        const config = await API.get('/api/config');
+        if (config.domain_url) {
+          document.getElementById('domainUrl').value = config.domain_url;
+        }
+      } catch (e) {
+        console.error('Error loading config:', e);
+      }
+    }
+    
+    async function saveDomainUrl() {
+      const domainUrl = document.getElementById('domainUrl').value.trim();
+      try {
+        await API.post('/api/config', { entries: [{ key: 'domain_url', value: domainUrl }] });
+        Toast.success('Đã lưu cấu hình!');
+      } catch (e) {
+        Toast.error('Lỗi lưu cấu hình: ' + e.message);
+      }
+    }
+    
+    function renderCategories() {
+      const container = document.getElementById('categoryList');
+      if (categories.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Chưa có loại thiết bị</p>';
+        return;
+      }
+      container.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          ${categories.map(cat => `
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-tertiary); border-radius: var(--radius-md);">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="width: 16px; height: 16px; border-radius: 4px; background: ${cat.color};"></span>
+                <span><strong>${cat.name}</strong> <span style="color: var(--text-muted);">(${cat.device_count})</span></span>
+              </div>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn btn-icon btn-ghost btn-sm" onclick='showCategoryModal(${JSON.stringify(cat)})'>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn btn-icon btn-ghost btn-sm" style="color: var(--danger-color);" onclick="deleteCategory(${cat.id})">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+    
+    function renderSchedules() {
+      const container = document.getElementById('scheduleList');
+      const typeLabels = { daily: 'Hàng ngày', weekly: 'Hàng tuần', monthly: 'Hàng tháng', quarterly: 'Hàng quý' };
+      
+      if (schedules.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Chưa có báo cáo tự động</p>';
+        return;
+      }
+      container.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          ${schedules.map(s => `
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-tertiary); border-radius: var(--radius-md);">
+              <div>
+                <strong>${s.name}</strong>
+                <br><span style="font-size: 0.8125rem; color: var(--text-muted);">${typeLabels[s.schedule_type]} lúc ${s.schedule_time}</span>
+              </div>
+              <div style="display: flex; gap: 4px; align-items: center;">
+                <span class="badge ${s.active ? 'badge-success' : 'badge-danger'}">${s.active ? 'Bật' : 'Tắt'}</span>
+                <button class="btn btn-icon btn-ghost btn-sm" onclick="testSchedule(${s.id})" title="Test">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  </svg>
+                </button>
+                <button class="btn btn-icon btn-ghost btn-sm" onclick='showScheduleModal(${JSON.stringify(s)})'>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn btn-icon btn-ghost btn-sm" style="color: var(--danger-color);" onclick="deleteSchedule(${s.id})">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+    
+    function showCategoryModal(cat = null) {
+      const content = `
+        <form id="catForm">
+          <div class="form-group">
+            <label class="form-label">Tên loại *</label>
+            <input type="text" class="form-control" name="name" value="${cat?.name || ''}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mô tả</label>
+            <input type="text" class="form-control" name="description" value="${cat?.description || ''}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Màu</label>
+            <input type="color" class="form-control" name="color" value="${cat?.color || '#0ea5e9'}" style="height: 40px;">
+          </div>
+        </form>
+      `;
+      const footer = `
+        <button class="btn btn-secondary" onclick="Modal.close()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveCategory(${cat?.id || 'null'})">${cat ? 'Cập nhật' : 'Tạo'}</button>
+      `;
+      Modal.create(cat ? 'Sửa loại thiết bị' : 'Thêm loại thiết bị', content, footer);
+    }
+    
+    async function saveCategory(id) {
+      const form = document.getElementById('catForm');
+      const data = Object.fromEntries(new FormData(form).entries());
+      try {
+        if (id) await API.put(`/api/categories/${id}`, data);
+        else await API.post('/api/categories', data);
+        Toast.success('Lưu thành công!');
+        Modal.close();
+        loadCategories();
+      } catch (e) { Toast.error(e.message); }
+    }
+    
+    async function deleteCategory(id) {
+      if (!confirm('Xóa loại này? Thiết bị sẽ không bị xóa.')) return;
+      await API.delete(`/api/categories/${id}`);
+      Toast.success('Đã xóa');
+      loadCategories();
+    }
+    
+    function showScheduleModal(s = null) {
+      const chatIds = s ? JSON.parse(s.chat_ids || '[]').join(', ') : '';
+      const content = `
+        <form id="scheduleForm">
+          <div class="form-group">
+            <label class="form-label">Tên báo cáo *</label>
+            <input type="text" class="form-control" name="name" value="${s?.name || ''}" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Loại lịch</label>
+              <select class="form-control" name="schedule_type" id="scheduleType" onchange="updateDayField()">
+                <option value="daily" ${s?.schedule_type === 'daily' ? 'selected' : ''}>Hàng ngày</option>
+                <option value="weekly" ${s?.schedule_type === 'weekly' ? 'selected' : ''}>Hàng tuần</option>
+                <option value="monthly" ${s?.schedule_type === 'monthly' ? 'selected' : ''}>Hàng tháng</option>
+                <option value="quarterly" ${s?.schedule_type === 'quarterly' ? 'selected' : ''}>Hàng quý</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Giờ gửi</label>
+              <input type="time" class="form-control" name="schedule_time" value="${s?.schedule_time || '08:00'}" required>
+            </div>
+          </div>
+          <div class="form-group" id="dayField" style="display: ${s?.schedule_type && s.schedule_type !== 'daily' ? 'block' : 'none'};">
+            <label class="form-label" id="dayLabel">Ngày</label>
+            <input type="number" class="form-control" name="schedule_day" value="${s?.schedule_day || 1}" min="0" max="31">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Loại báo cáo</label>
+            <select class="form-control" name="report_type">
+              <option value="uninspected" ${s?.report_type === 'uninspected' ? 'selected' : ''}>Thiết bị chưa kiểm tra</option>
+              <option value="summary" ${s?.report_type === 'summary' ? 'selected' : ''}>Tổng hợp</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Chat IDs nhận báo cáo (cách nhau bởi dấu phẩy)</label>
+            <input type="text" class="form-control" name="chat_ids" value="${chatIds}" placeholder="id1, id2, ...">
+          </div>
+          ${s ? `
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" name="active" ${s?.active ? 'checked' : ''}>
+              <span>Kích hoạt</span>
+            </label>
+          </div>
+          ` : ''}
+        </form>
+      `;
+      const footer = `
+        <button class="btn btn-secondary" onclick="Modal.close()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveSchedule(${s?.id || 'null'})">${s ? 'Cập nhật' : 'Tạo'}</button>
+      `;
+      Modal.create(s ? 'Sửa báo cáo' : 'Thêm báo cáo tự động', content, footer);
+    }
+    
+    function updateDayField() {
+      const type = document.getElementById('scheduleType').value;
+      const field = document.getElementById('dayField');
+      const label = document.getElementById('dayLabel');
+      if (type === 'daily') {
+        field.style.display = 'none';
+      } else {
+        field.style.display = 'block';
+        if (type === 'weekly') label.textContent = 'Thứ (0=CN, 1=T2...)';
+        else label.textContent = 'Ngày trong tháng';
+      }
+    }
+    
+    async function saveSchedule(id) {
+      const form = document.getElementById('scheduleForm');
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+      data.chat_ids = data.chat_ids ? data.chat_ids.split(',').map(s => s.trim()).filter(Boolean) : [];
+      data.active = formData.get('active') === 'on';
+      data.schedule_day = parseInt(data.schedule_day) || null;
+      try {
+        if (id) await API.put(`/api/schedules/${id}`, data);
+        else await API.post('/api/schedules', data);
+        Toast.success('Lưu thành công!');
+        Modal.close();
+        loadSchedules();
+      } catch (e) { Toast.error(e.message); }
+    }
+    
+    async function deleteSchedule(id) {
+      if (!confirm('Xóa báo cáo này?')) return;
+      await API.delete(`/api/schedules/${id}`);
+      Toast.success('Đã xóa');
+      loadSchedules();
+    }
+    
+    async function testSchedule(id) {
+      Toast.info('Đang gửi báo cáo test...');
+      try {
+        const result = await API.post(`/api/schedules/${id}/test`);
+        Toast.success(`Đã gửi đến ${result.sent_to} người`);
+      } catch (e) { Toast.error(e.message); }
+    }
+    
+    // ============ DEPARTMENTS ============
+    async function loadDepartments() {
+      departments = await API.get('/api/departments');
+      renderDepartments();
+    }
+    
+    function renderDepartments() {
+      const container = document.getElementById('departmentList');
+      if (departments.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Chưa có khoa phòng</p>';
+        return;
+      }
+      container.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          ${departments.map(dep => `
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-tertiary); border-radius: var(--radius-md);">
+              <div>
+                <strong>${dep.name}</strong>
+                <span style="color: var(--text-muted); font-size: 0.8125rem;"> (${dep.user_count || 0} users, ${dep.device_count || 0} thiết bị)</span>
+              </div>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn btn-icon btn-ghost btn-sm" onclick='showDepartmentModal(${JSON.stringify(dep)})'>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn btn-icon btn-ghost btn-sm" style="color: var(--danger-color);" onclick="deleteDepartment(${dep.id})">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+    
+    function showDepartmentModal(dep = null) {
+      const content = `
+        <form id="depForm">
+          <div class="form-group">
+            <label class="form-label">Tên khoa/phòng *</label>
+            <input type="text" class="form-control" name="name" value="${dep?.name || ''}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mô tả</label>
+            <input type="text" class="form-control" name="description" value="${dep?.description || ''}">
+          </div>
+        </form>
+      `;
+      const footer = `
+        <button class="btn btn-secondary" onclick="Modal.close()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveDepartment(${dep?.id || 'null'})">${dep ? 'Cập nhật' : 'Tạo'}</button>
+      `;
+      Modal.create(dep ? 'Sửa khoa/phòng' : 'Thêm khoa/phòng', content, footer);
+    }
+    
+    async function saveDepartment(id) {
+      const form = document.getElementById('depForm');
+      const data = Object.fromEntries(new FormData(form).entries());
+      try {
+        if (id) await API.put(`/api/departments/${id}`, data);
+        else await API.post('/api/departments', data);
+        Toast.success('Lưu thành công!');
+        Modal.close();
+        loadDepartments();
+      } catch (e) { Toast.error(e.message); }
+    }
+    
+    async function deleteDepartment(id) {
+      if (!confirm('Xóa khoa/phòng này? Users và thiết bị sẽ không bị xóa.')) return;
+      await API.delete(`/api/departments/${id}`);
+      Toast.success('Đã xóa');
+      loadDepartments();
+    }
+    
+    // ============ ZALO TOKEN ============
+    async function saveZaloToken() {
+      const token = document.getElementById('zaloToken').value.trim();
+      if (!token) {
+        Toast.error('Vui lòng nhập token');
+        return;
+      }
+      try {
+        const result = await API.post('/api/zalo/token', { token });
+        if (result.success) {
+          Toast.success('Cập nhật token thành công!');
+          loadZaloStatus();
+        } else {
+          Toast.warning(result.message);
+        }
+      } catch (e) {
+        Toast.error('Lỗi: ' + e.message);
+      }
+    }
+    
+    async function disconnectZaloBot() {
+      if (!confirm('Bạn có chắc muốn ngắt kết nối Zalo Bot?')) return;
+      try {
+        await API.post('/api/zalo/disconnect');
+        Toast.success('Đã ngắt kết nối Bot');
+        document.getElementById('zaloToken').value = '';
+        loadZaloStatus();
+      } catch (e) {
+        Toast.error('Lỗi: ' + e.message);
+      }
+    }
+    
+    // ============ BRANDING ============
+    async function loadBranding() {
+      try {
+        const config = await API.get('/api/config');
+        if (config.custom_logo) {
+          document.getElementById('logoPreview').src = config.custom_logo;
+        }
+        if (config.site_title) {
+          document.getElementById('siteTitle').value = config.site_title;
+        }
+        if (config.site_subtitle) {
+          document.getElementById('siteSubtitle').value = config.site_subtitle;
+        }
+      } catch (e) {
+        console.error('Error loading branding:', e);
+      }
+    }
+    
+    // Logo upload
+    document.getElementById('logoInput').addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const formData = new FormData();
+      formData.append('logo', file);
+      
+      Toast.info('Đang upload logo...');
+      try {
+        const response = await fetch('/api/upload-logo', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await response.json();
+        if (result.success) {
+          document.getElementById('logoPreview').src = result.url + '?t=' + Date.now();
+          Toast.success('Upload logo thành công!');
+        } else {
+          Toast.error(result.message);
+        }
+      } catch (e) {
+        Toast.error('Lỗi upload: ' + e.message);
+      }
+    });
+    
+    async function saveBranding() {
+      const title = document.getElementById('siteTitle').value.trim();
+      const subtitle = document.getElementById('siteSubtitle').value.trim();
+      const entries = [];
+      if (title) entries.push({ key: 'site_title', value: title });
+      if (subtitle) entries.push({ key: 'site_subtitle', value: subtitle });
+      
+      try {
+        await API.post('/api/config', { entries });
+        Toast.success('Đã lưu thương hiệu!');
+      } catch (e) {
+        Toast.error('Lỗi: ' + e.message);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo cáo sự cố - Quản lý Thiết bị Y tế</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+  <style>
+    .ts-wrapper { border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0px; }
+    .ts-control { border-radius: 8px !important; padding: 10px 14px !important; border-color: var(--border-color) !important; font-size: 0.95rem; }
+    .reply-timeline { border-left: 2px solid #e2e8f0; margin-left: 8px; padding-left: 24px; position: relative; }
+    .reply-item { position: relative; margin-bottom: 24px; }
+    .reply-item::before { content: ''; position: absolute; left: -31px; top: 0; width: 14px; height: 14px; background: white; border: 2px solid var(--primary-color); border-radius: 50%; z-index: 1; }
+    .reply-item .reply-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .reply-item .reply-content { background: #f8fafc; padding: 16px; border-radius: 0 12px 12px 12px; border: 1px solid #f1f5f9; color: #334155; line-height: 1.6; }
+    
+    /* Modal Improvements */
+    .modal-content { border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: none; }
+    .modal-header { border-bottom: 1px solid #f1f5f9; padding: 20px 24px; }
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 20px 24px; background: #f8fafc; border-top: 1px solid #f1f5f9; border-radius: 0 0 16px 16px; }
+    .form-label { font-weight: 500; color: #475569; margin-bottom: 6px; font-size: 0.9rem; }
+    .form-control { border-radius: 8px; border: 1px solid #cbd5e1; padding: 10px 12px; transition: all 0.2s; }
+    .form-control:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Navigation (rendered by navbar.js) -->
+    <div id="navbar-container"></div>
+    
+    <main class="main-content">
+      <div class="container">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h1>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+              </svg>
+              Báo cáo Sự cố
+            </h1>
+            <p>Quản lý các ticket xử lý thiết bị hỏng</p>
+          </div>
+          <button class="btn btn-primary btn-lg" onclick="showTicketModal()" id="addTicketBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Tạo Ticket
+          </button>
+        </div>
+        
+        <!-- Filters -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+            <select class="form-control" id="filterStatus" style="width: auto; min-width: 150px;">
+              <option value="">Tất cả trạng thái</option>
+              <option value="open">Mới</option>
+              <option value="in_progress">Đang xử lý</option>
+              <option value="resolved">Đã xử lý</option>
+              <option value="closed">Đã đóng</option>
+            </select>
+            <select class="form-control" id="filterPriority" style="width: auto; min-width: 150px;">
+              <option value="">Tất cả mức độ</option>
+              <option value="critical">Nghiêm trọng</option>
+              <option value="high">Cao</option>
+              <option value="medium">Trung bình</option>
+              <option value="low">Thấp</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div id="ticketList">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="/js/app.js"></script>
+  <script src="/js/navbar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+  <script>
+    let tickets = [];
+    let devices = [];
+    let technicians = [];
+    
+    // Auth check
+    (async function() {
+      const result = await Auth.verify();
+      if (!result.success) {
+        if (result.error === 'account_locked') alert(result.message);
+        window.location.href = '/';
+        return;
+      }
+      
+      const accessResult = await Auth.checkPageAccess('tickets.html');
+      if (!accessResult.allowed) {
+        alert(accessResult.message);
+        window.location.href = '/';
+        return;
+      }
+      
+      // Initialize navbar with user
+      Navbar.init(Auth.user);
+      
+      // Hide add button for technicians
+      if (Auth.user.role === 'technician') {
+        document.getElementById('addTicketBtn').style.display = 'none';
+      }
+      
+      // Load data
+      await Promise.all([loadTickets(), loadDevices(), loadTechnicians()]);
+    })();
+    
+    async function loadTickets() {
+      const status = document.getElementById('filterStatus').value;
+      const params = new URLSearchParams();
+      if (status) params.append('status', status);
+      
+      // Filter for inspectors
+      if (Auth.user && Auth.user.role === 'inspector') {
+        params.append('department_id', Auth.user.department_id);
+      }
+      
+      tickets = await API.get('/api/tickets' + (params.toString() ? '?' + params.toString() : ''));
+      renderTickets();
+    }
+    
+    async function loadDevices() {
+      devices = await API.get('/api/devices');
+    }
+    
+    async function loadTechnicians() {
+      const users = await API.get('/api/users');
+      technicians = users.filter(u => u.role === 'technician' && u.active);
+    }
+    
+    document.getElementById('filterStatus').addEventListener('change', loadTickets);
+    
+    const priorityLabels = { low: 'Thấp', medium: 'Trung bình', high: 'Cao', critical: 'Nghiêm trọng' };
+    const priorityColors = { low: 'badge-info', medium: 'badge-warning', high: 'badge-danger', critical: 'badge-danger' };
+    const statusLabels = { open: 'Mới', in_progress: 'Đang xử lý', resolved: 'Đã xử lý', closed: 'Đã đóng' };
+    const statusColors = { open: 'badge-info', in_progress: 'badge-warning', resolved: 'badge-success', closed: 'badge-secondary' };
+    
+    function renderTickets() {
+      const container = document.getElementById('ticketList');
+      if (tickets.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>Chưa có ticket nào</p></div>';
+        return;
+      }
+      
+      container.innerHTML = `
+        <style>
+          .ticket-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+          .ticket-card { background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; transition: all 0.2s ease; cursor: pointer; position: relative; }
+          .ticket-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: var(--primary-color); }
+          .ticket-card.is-closed { background: #f1f5f9 !important; opacity: 0.9 !important; border-left: 4px solid #94a3b8 !important; }
+          .ticket-card.is-closed:hover { transform: none !important; box-shadow: none !important; opacity: 1 !important; }
+          
+          .ticket-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+          .ticket-id { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+          .ticket-title { font-weight: 600; font-size: 1.1rem; color: var(--text-color); margin-bottom: 4px; line-height: 1.4; }
+          .ticket-meta { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; }
+          .ticket-meta-item { display: flex; align-items: center; gap: 4px; }
+          .ticket-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 8px; }
+          .avatar-circle { width: 24px; height: 24px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #64748b; font-weight: 600; }
+          
+          /* Status Badges */
+          .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+          .status-open { background-color: #3b82f6; } /* Blue */
+          .status-in_progress { background-color: #f59e0b; } /* Warning */
+          .status-resolved { background-color: #10b981; } /* Green */
+          .status-closed { background-color: #64748b; } /* Slate */
+          
+          .priority-line { position: absolute; left: 0; top: 12px; bottom: 12px; width: 4px; border-radius: 0 4px 4px 0; }
+          .priority-critical { background-color: #ef4444; }
+          .priority-high { background-color: #f97316; }
+          .priority-medium { background-color: #f59e0b; }
+          .priority-low { background-color: #3b82f6; }
+        </style>
+        
+        <div class="ticket-grid">
+          ${tickets.map(t => `
+            <div class="ticket-card ${t.status === 'closed' ? 'is-closed' : ''}" onclick="viewTicketDetail(${t.id})">
+              <div class="priority-line priority-${t.priority}"></div>
+              <div style="padding-left: 12px;">
+                <div class="ticket-header">
+                  <span class="ticket-id">#${t.id}</span>
+                  <span class="badge ${statusColors[t.status]}" style="font-weight: 500; font-size: 0.75rem;">${statusLabels[t.status]}</span>
+                </div>
+                <div class="ticket-title">${t.title}</div>
+                <div class="ticket-meta">
+                  <div class="ticket-meta-item" title="Thiết bị">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+                    ${t.device_name}
+                  </div>
+                  <div class="ticket-meta-item" title="Vị trí">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    ${t.device_location || 'N/A'}
+                  </div>
+                </div>
+                <div class="ticket-footer">
+                  <div class="ticket-meta-item">
+                    <div class="avatar-circle" title="Người tạo: ${t.created_by_name}">
+                      ${t.created_by_name ? t.created_by_name.charAt(0).toUpperCase() : '?'}
+                    </div>
+                    <span style="font-size: 0.8rem; margin-left: 6px;">${Utils.formatTimeAgo(t.created_at)}</span>
+                  </div>
+                  
+                  ${t.assigned_to ? `
+                    <div class="ticket-meta-item" title="Đang xử lý: ${t.assigned_to_name}">
+                      <span style="font-size: 0.8rem; margin-right: 6px; color: var(--text-muted);">Xử lý:</span>
+                      <div class="avatar-circle" style="background: #dbeafe; color: #1e40af;">
+                        ${t.assigned_to_name.charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+                  ` : (Auth.user.role === 'technician' ? `
+                    <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); claimTicket(${t.id})">Nhận</button>
+                  ` : '<span style="font-size: 0.8rem; color: var(--text-muted);">Chưa phân công</span>')}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+    
+    function showTicketModal(ticket = null) {
+      const isEdit = ticket !== null;
+      const isTechnician = Auth.user.role === 'technician';
+      
+      const content = `
+        <form id="ticketForm">
+          <div class="form-group">
+            <label class="form-label">Thiết bị *</label>
+            <select class="form-control" name="device_id" required ${isTechnician ? 'disabled' : ''}>
+              <option value="">-- Chọn thiết bị --</option>
+              ${devices.map(d => `<option value="${d.id}" ${ticket?.device_id === d.id ? 'selected' : ''}>${d.name} - ${d.location || 'N/A'}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tiêu đề *</label>
+            <input type="text" class="form-control" name="title" value="${ticket?.title || ''}" required ${isTechnician ? 'readonly' : ''}>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mô tả chi tiết</label>
+            <textarea class="form-control" name="description" rows="3" ${isTechnician ? 'readonly' : ''}>${ticket?.description || ''}</textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Mức độ ưu tiên</label>
+              <select class="form-control" name="priority" ${isTechnician ? 'disabled' : ''}>
+                <option value="low" ${ticket?.priority === 'low' ? 'selected' : ''}>Thấp</option>
+                <option value="medium" ${!ticket || ticket?.priority === 'medium' ? 'selected' : ''}>Trung bình</option>
+                <option value="high" ${ticket?.priority === 'high' ? 'selected' : ''}>Cao</option>
+                <option value="critical" ${ticket?.priority === 'critical' ? 'selected' : ''}>Nghiêm trọng</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phân công cho</label>
+              <select class="form-control" name="assigned_to">
+                <option value="">-- Chưa phân công --</option>
+                ${technicians.map(t => `<option value="${t.id}" ${ticket?.assigned_to == t.id ? 'selected' : ''}>${t.full_name}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          ${isEdit ? `
+            <div class="form-group">
+              <label class="form-label">Trạng thái</label>
+              <select class="form-control" name="status">
+                <option value="open" ${ticket?.status === 'open' ? 'selected' : ''}>Mới</option>
+                <option value="in_progress" ${ticket?.status === 'in_progress' ? 'selected' : ''}>Đang xử lý</option>
+                <option value="resolved" ${ticket?.status === 'resolved' ? 'selected' : ''}>Đã xử lý</option>
+                <option value="closed" ${ticket?.status === 'closed' ? 'selected' : ''}>Đã đóng</option>
+              </select>
+            </div>
+          ` : ''}
+        </form>
+      `;
+      const footer = `
+        <button class="btn btn-secondary" onclick="Modal.close()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveTicket(${ticket?.id || 'null'})">${isEdit ? 'Cập nhật' : 'Tạo Ticket'}</button>
+      `;
+      Modal.create(isEdit ? 'Sửa Ticket' : 'Tạo Ticket mới', content, footer);
+    }
+    
+    async function saveTicket(id) {
+      const form = document.getElementById('ticketForm');
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+      data.created_by = Auth.user.id;
+      
+      try {
+        if (id) {
+          await API.put(`/api/tickets/${id}`, data);
+          Toast.success('Cập nhật thành công!');
+        } else {
+          await API.post('/api/tickets', data);
+          Toast.success('Tạo ticket thành công!');
+        }
+        Modal.close();
+        loadTickets();
+      } catch (error) {
+        Toast.error(error.message);
+      }
+    }
+    
+    async function deleteTicket(id) {
+      if (!confirm('Bạn có chắc muốn xóa ticket này?')) return;
+      await API.delete(`/api/tickets/${id}`);
+      Toast.success('Đã xóa ticket');
+      loadTickets();
+    }
+    
+    // Claim ticket for technicians
+    async function claimTicket(id) {
+      try {
+        await API.post(`/api/tickets/${id}/claim`, { user_id: Auth.user.id });
+        Toast.success('Đã nhận ticket thành công!');
+        loadTickets();
+      } catch (error) {
+        Toast.error(error.message);
+      }
+    }
+    
+    // View ticket detail with replies
+    async function viewTicketDetail(id) {
+      const ticket = tickets.find(t => t.id === id);
+      if (!ticket) return;
+      
+      // Load replies
+      const replies = await API.get(`/api/tickets/${id}/replies`);
+      
+      const isTechnician = Auth.user.role === 'technician';
+      const canUpdateStatus = ticket.assigned_to == Auth.user.id || Auth.user.role === 'admin' || Auth.user.role === 'inspector';
+      
+      const content = `
+        <div style="margin-bottom: 20px;">
+          <p><strong>Thiết bị:</strong> ${ticket.device_name || 'N/A'} - ${ticket.device_location || ''}</p>
+          <p><strong>Mức độ:</strong> <span class="badge ${priorityColors[ticket.priority]}">${priorityLabels[ticket.priority]}</span></p>
+          <p><strong>Trạng thái:</strong> <span class="badge ${statusColors[ticket.status]}">${statusLabels[ticket.status]}</span></p>
+          <p><strong>Người tạo:</strong> ${ticket.created_by_name || 'N/A'}</p>
+          <p><strong>Phân công cho:</strong> ${ticket.assigned_to_name || 'Chưa phân công'}</p>
+          <p><strong>Ngày tạo:</strong> ${Utils.formatDate(ticket.created_at)}</p>
+          ${ticket.description ? `<hr><p><strong>Mô tả:</strong></p><p>${ticket.description}</p>` : ''}
+        </div>
+        
+        ${canUpdateStatus ? `
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label">Cập nhật trạng thái</label>
+            <div style="display: flex; gap: 8px;">
+              <select class="form-control" id="ticketStatus" style="flex: 1;">
+                <option value="open" ${ticket.status === 'open' ? 'selected' : ''}>Mới</option>
+                <option value="in_progress" ${ticket.status === 'in_progress' ? 'selected' : ''}>Đang xử lý</option>
+                <option value="resolved" ${ticket.status === 'resolved' ? 'selected' : ''}>Đã xử lý</option>
+                <option value="closed" ${ticket.status === 'closed' ? 'selected' : ''}>Đã đóng</option>
+              </select>
+              <button class="btn btn-primary" onclick="updateTicketStatus(${id})">Cập nhật</button>
+            </div>
+          </div>
+        ` : ''}
+        
+        <hr>
+        <h4 style="margin-bottom: 12px;">💬 Trao đổi (${replies.length})</h4>
+        
+        <div class="reply-timeline" style="max-height: 250px; overflow-y: auto;">
+          ${replies.length === 0 ? '<p style="color: var(--text-muted);">Chưa có trao đổi nào</p>' : ''}
+          ${replies.map(r => `
+            <div class="reply-item">
+              <div class="reply-header">
+                <strong>${r.user_name}</strong> 
+                <span class="badge badge-secondary" style="font-size: 0.7rem;">${r.user_role}</span>
+                · ${Utils.formatDate(r.created_at)}
+              </div>
+              <div class="reply-content">${r.message}</div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div style="margin-top: 16px;">
+          <label class="form-label">Thêm trao đổi</label>
+          <textarea class="form-control" id="replyMessage" rows="2" placeholder="Nhập nội dung trao đổi..."></textarea>
+          <button class="btn btn-primary" style="margin-top: 8px;" onclick="addReply(${id})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            Gửi
+          </button>
+        </div>
+      `;
+      
+      Modal.create(`Ticket #${id}: ${ticket.title}`, content, `<button class="btn btn-secondary" onclick="Modal.close()">Đóng</button>`, 'lg');
+    }
+    
+    async function updateTicketStatus(id) {
+      const status = document.getElementById('ticketStatus').value;
+      try {
+        const ticket = tickets.find(t => t.id === id);
+        await API.put(`/api/tickets/${id}`, { 
+          title: ticket.title, 
+          description: ticket.description, 
+          status, 
+          priority: ticket.priority, 
+          assigned_to: ticket.assigned_to 
+        });
+        Toast.success('Cập nhật trạng thái thành công!');
+        Modal.close();
+        loadTickets();
+      } catch (error) {
+        Toast.error(error.message);
+      }
+    }
+    
+    async function addReply(ticketId) {
+      const message = document.getElementById('replyMessage').value.trim();
+      if (!message) {
+        Toast.error('Vui lòng nhập nội dung trao đổi');
+        return;
+      }
+      
+      try {
+        await API.post(`/api/tickets/${ticketId}/replies`, { user_id: Auth.user.id, message });
+        Toast.success('Đã gửi trao đổi!');
+        viewTicketDetail(ticketId); // Reload the view
+      } catch (error) {
+        Toast.error(error.message);
+      }
+    }
+
+    // Override showTicketModal to init Tom Select
+    const originalShowTicketModal = showTicketModal;
+    showTicketModal = function(ticket = null) {
+      originalShowTicketModal(ticket);
+      // Wait for modal to be in DOM
+      setTimeout(() => {
+        new TomSelect('#ticketForm select[name="device_id"]', {
+          create: false,
+          sortField: { field: "text", direction: "asc" }
+        });
+        new TomSelect('#ticketForm select[name="assigned_to"]', {
+          create: false,
+          sortField: { field: "text", direction: "asc" }
+        });
+      }, 100);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Quản lý thiết bị y tế - Khoa Chẩn đoán hình ảnh">
+  <title>Thiết bị - Quản lý Thiết bị Y tế</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+  <style>
+    .ts-wrapper { border-radius: 8px; padding: 0px;}
+    .ts-control { border-radius: 8px !important; padding: 8px 12px !important; }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Navigation (rendered by navbar.js) -->
+    <div id="navbar-container"></div>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="page-header-left">
+            <h1>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+              Danh sách Thiết bị
+            </h1>
+            <p>Quản lý thiết bị y tế trong khoa Chẩn đoán hình ảnh</p>
+          </div>
+          <button class="btn btn-primary btn-lg" onclick="DeviceManager.showDeviceForm()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Thêm thiết bị
+          </button>
+        </div>
+        
+        <!-- Filters -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom: 0;">
+              <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm thiết bị...">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <select class="form-control" id="categoryFilter">
+                <option value="">Tất cả loại</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <select class="form-control" id="departmentFilter">
+                <option value="">Tất cả khoa phòng</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <select class="form-control" id="statusFilter">
+                <option value="">Tất cả trạng thái</option>
+                <option value="active">Hoạt động</option>
+                <option value="maintenance">Bảo trì</option>
+                <option value="inactive">Ngừng hoạt động</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <select class="form-control" id="locationFilter">
+                <option value="">Tất cả vị trí</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Device Table -->
+        <div class="card">
+          <div id="deviceList">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="/js/app.js"></script>
+  <script src="/js/navbar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+  <script>
+    // Auth check - server-side verification
+    (async function() {
+      const result = await Auth.verify();
+      if (!result.success) {
+        if (result.error === 'account_locked') {
+          alert(result.message);
+        }
+        window.location.href = '/';
+        return;
+      }
+      
+      // Check page access - viewer cannot access devices
+      const accessResult = await Auth.checkPageAccess('devices.html');
+      if (!accessResult.allowed) {
+        alert(accessResult.message);
+        window.location.href = '/inspections.html';
+        return;
+      }
+      
+      // Initialize navbar with user
+      Navbar.init(Auth.user);
+      
+      // Load devices after auth verified
+      loadDevices();
+      
+      // Hide Add Device for technicians
+      if (Auth.user.role === 'technician') {
+        const addBtn = document.querySelector('.page-header button');
+        if (addBtn) addBtn.style.display = 'none';
+        
+        // Hide empty state button if exists (will run after render)
+        const observer = new MutationObserver(() => {
+          const emptyBtn = document.querySelector('.empty-state button');
+          if (emptyBtn) emptyBtn.style.display = 'none';
+        });
+        observer.observe(document.getElementById('deviceList'), { childList: true });
+      }
+    })();
+    
+    let allDevices = [];
+    let categories = [];
+    let departments = [];
+    
+    async function loadDevices() {
+      // Filter for inspectors
+      if (Auth.user.role === 'inspector') {
+        allDevices = await API.get(`/api/devices?department_id=${Auth.user.department_id}`);
+      } else {
+        allDevices = await DeviceManager.loadDevices();
+      }
+      
+      [categories, departments] = await Promise.all([
+        API.get('/api/categories'),
+        API.get('/api/departments')
+      ]);
+      updateFilters();
+      renderDevices();
+    }
+    
+    function updateFilters() {
+      const locations = [...new Set(allDevices.map(d => d.location).filter(Boolean))];
+      document.getElementById('locationFilter').innerHTML = '<option value="">Tất cả vị trí</option>' + 
+        locations.map(loc => `<option value="${loc}">${loc}</option>`).join('');
+      document.getElementById('categoryFilter').innerHTML = '<option value="">Tất cả loại</option>' + 
+        categories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
+      document.getElementById('departmentFilter').innerHTML = '<option value="">Tất cả khoa phòng</option>' + 
+        departments.map(dept => `<option value="${dept.id}">${dept.name}</option>`).join('');
+    }
+    
+    function renderDevices() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
+      const locationFilter = document.getElementById('locationFilter').value;
+      const categoryFilter = document.getElementById('categoryFilter').value;
+      const departmentFilter = document.getElementById('departmentFilter').value;
+      
+      let filtered = allDevices.filter(device => {
+        const matchSearch = !search || 
+          device.name.toLowerCase().includes(search) ||
+          (device.model && device.model.toLowerCase().includes(search)) ||
+          (device.serial_number && device.serial_number.toLowerCase().includes(search));
+        const matchStatus = !statusFilter || device.status === statusFilter;
+        const matchLocation = !locationFilter || device.location === locationFilter;
+        const matchCategory = !categoryFilter || device.category_id == categoryFilter;
+        const matchDepartment = !departmentFilter || device.department_id == departmentFilter;
+        return matchSearch && matchStatus && matchLocation && matchCategory && matchDepartment;
+      });
+      
+      const container = document.getElementById('deviceList');
+      
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+            <h3>Chưa có thiết bị nào</h3>
+            <p>Hãy thêm thiết bị đầu tiên để bắt đầu quản lý</p>
+            <button class="btn btn-primary" onclick="DeviceManager.showDeviceForm()">Thêm thiết bị</button>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = `
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Tên thiết bị</th>
+                <th>Loại</th>
+                <th>Model</th>
+                <th>Vị trí</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.map(device => `
+                <tr>
+                  <td>
+                    <strong>${device.name}</strong>
+                    ${device.manufacturer ? `<br><small style="color: var(--text-muted);">${device.manufacturer}</small>` : ''}
+                  </td>
+                  <td>${device.category_name ? `<span class="badge" style="background: ${device.category_color}20; color: ${device.category_color};">${device.category_name}</span>` : '-'}</td>
+                  <td>${device.model || '-'}</td>
+                  <td>${device.location || '-'}</td>
+                  <td>${DeviceManager.getStatusBadge(device.status)}</td>
+                  <td>
+                    <div class="table-actions">
+                      <button class="btn btn-icon btn-ghost" onclick="DeviceManager.showQRCode('${device.id}')" title="QR">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                        </svg>
+                      </button>
+                      <button class="btn btn-icon btn-ghost" onclick='DeviceManager.showDeviceForm(${JSON.stringify(device).replace(/'/g, "\\'")})' title="Sửa">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                      ${Auth.user.role !== 'technician' ? `
+                      <button class="btn btn-icon btn-ghost" style="color: var(--danger-color);" onclick="DeviceManager.deleteDevice('${device.id}')" title="Xóa">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        </svg>
+                      </button>
+                      ` : ''}
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div style="padding: 12px 16px; text-align: right; color: var(--text-muted); font-size: 0.875rem; border-top: 1px solid var(--border-color);">
+          Hiển thị ${filtered.length} / ${allDevices.length} thiết bị
+        </div>
+      `;
+    }
+    
+
+    
+    document.getElementById('searchInput').addEventListener('input', Utils.debounce(renderDevices, 300));
+    document.getElementById('statusFilter').addEventListener('change', renderDevices);
+    document.getElementById('locationFilter').addEventListener('change', renderDevices);
+    document.getElementById('categoryFilter').addEventListener('change', renderDevices);
+    document.getElementById('departmentFilter').addEventListener('change', renderDevices);
+
+
+  </script>
+</body>
+</html>

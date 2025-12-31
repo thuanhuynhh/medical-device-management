@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Kiểm tra thiết bị y tế">
+  <title>Kiểm tra thiết bị - Quản lý Thiết bị Y tế</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+  <div class="inspection-page">
+    <div class="container" style="max-width: 640px;">
+      <!-- Header -->
+      <div class="inspection-header">
+        <h1 style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32" style="color: var(--primary-color);">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          Kiểm tra Thiết bị
+        </h1>
+        <p style="color: var(--text-secondary);">Quét mã QR hoặc chọn thiết bị để kiểm tra</p>
+      </div>
+      
+      <!-- Main Content -->
+      <div id="mainContent">
+        <!-- QR Scanner -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              Quét mã QR
+            </h3>
+            <button class="btn btn-sm btn-primary" id="toggleScanner">Bắt đầu quét</button>
+          </div>
+          <div id="qrScanner" style="display: none;">
+            <div id="reader" style="width: 100%;"></div>
+          </div>
+          <div id="scannerMessage" style="text-align: center; padding: 32px; color: var(--text-muted);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48" style="margin-bottom: 12px; opacity: 0.5;">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            <p>Nhấn "Bắt đầu quét" để mở camera</p>
+          </div>
+        </div>
+        
+        <!-- Manual Selection (only for logged in users) -->
+        <div class="card" id="manualSelectSection" style="display: none;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              Hoặc chọn thiết bị
+            </h3>
+          </div>
+          <div class="form-group" style="margin-bottom: 16px;">
+            <select class="form-control" id="deviceSelect">
+              <option value="">-- Chọn thiết bị --</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="width: 100%;" id="selectDeviceBtn" disabled>
+            Chọn thiết bị này
+          </button>
+        </div>
+        
+        <!-- Login prompt for guests -->
+        <div class="card" id="loginPrompt" style="text-align: center; padding: 20px;">
+          <p style="color: var(--text-muted); margin-bottom: 16px;">Bạn chưa đăng nhập. Đăng nhập để sử dụng đầy đủ tính năng hoặc quét QR để kiểm tra thiết bị.</p>
+          <a href="/" class="btn btn-primary">    
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            Đăng nhập
+          </a>
+        </div>
+      </div>
+      
+      <!-- Inspection Form -->
+      <div id="inspectionForm" style="display: none;">
+        <div class="device-info-card">
+          <div class="device-header">
+            <div class="device-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </div>
+            <div>
+              <h2 id="deviceName" style="margin-bottom: 4px;">Tên thiết bị</h2>
+              <p style="color: var(--text-muted); margin: 0; font-size: 0.875rem;" id="deviceModel">Model</p>
+            </div>
+          </div>
+          
+          <div class="device-details">
+            <div class="device-detail-row">
+              <label>Serial Number:</label>
+              <span id="deviceSerial">N/A</span>
+            </div>
+            <div class="device-detail-row">
+              <label>Vị trí:</label>
+              <span id="deviceLocation">N/A</span>
+            </div>
+            <div class="device-detail-row">
+              <label>Trạng thái:</label>
+              <span id="deviceStatus">N/A</span>
+            </div>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid var(--border-color); margin: 20px 0;">
+          
+          <form id="checkForm">
+            <div class="form-group">
+              <label class="form-label">Tên người kiểm tra *</label>
+              <input type="text" class="form-control" id="inspectorName" required placeholder="Nhập tên của bạn">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Trạng thái kiểm tra *</label>
+              <div class="status-options">
+                <label class="status-option" id="opt-good">
+                  <input type="radio" name="status" value="good" required>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--success-color);">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                  <span>Tốt</span>
+                </label>
+                <label class="status-option" id="opt-issue">
+                  <input type="radio" name="status" value="issue" required>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--warning-color);">
+                    <path d="M12 2L2 22h20L12 2z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <circle cx="12" cy="17" r="0.5" fill="currentColor"/>
+                  </svg>
+                  <span>Có vấn đề</span>
+                </label>
+                <label class="status-option" id="opt-critical">
+                  <input type="radio" name="status" value="critical" required>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--danger-color);">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                  </svg>
+                  <span>Nghiêm trọng</span>
+                </label>
+              </div>
+            </div>
+            
+            <div class="form-group" id="issuesGroup" style="display: none;">
+              <label class="form-label">Mô tả vấn đề</label>
+              <textarea class="form-control" id="issues" rows="3" placeholder="Mô tả vấn đề phát hiện được..."></textarea>
+            </div>
+            
+            <div class="form-group" id="imageUploadGroup" style="display: none;">
+              <label class="form-label">Ảnh đính kèm (tùy chọn)</label>
+              <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('imageInput').click()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                  Chọn ảnh
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="openCamera()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>
+                  </svg>
+                  Chụp ảnh
+                </button>
+              </div>
+              <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
+              <div id="imagePreviewContainer" style="display: none;">
+                <div id="imagePreview" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Ghi chú thêm</label>
+              <textarea class="form-control" id="notes" rows="2" placeholder="Ghi chú khác (nếu có)..."></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+              <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="resetForm()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+                </svg>
+                Quay lại
+              </button>
+              <button type="submit" class="btn btn-success" style="flex: 2;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Xác nhận kiểm tra
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Success Message -->
+      <div id="successMessage" style="display: none;">
+        <div class="card" style="text-align: center; padding: 48px 24px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="64" height="64" style="color: var(--success-color); margin: 0 auto 20px;">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <h2 style="color: var(--success-color); margin-bottom: 12px;">Kiểm tra thành công!</h2>
+          <p style="color: var(--text-muted); margin-bottom: 24px;">Thông tin kiểm tra đã được ghi nhận vào hệ thống</p>
+          <button class="btn btn-primary btn-lg" onclick="resetForm()">Kiểm tra thiết bị khác</button>
+        </div>
+      </div>
+      
+      <!-- Back Link (only for logged in users) -->
+      <div id="backToDashboard" style="text-align: center; margin-top: 24px; display: none;">
+        <a href="/" style="color: var(--text-muted); font-size: 0.875rem;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="vertical-align: middle; margin-right: 4px;">
+            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+          </svg>
+          Về trang chủ
+        </a>
+      </div>
+      
+      <!-- Theme Toggle -->
+      <div style="position: fixed; bottom: 20px; right: 20px;">
+        <button class="theme-toggle" id="themeToggle">
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg class="moon-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/js/app.js"></script>
+  <script>
+    // Theme
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.querySelector('.sun-icon').classList.toggle('hidden', savedTheme === 'dark');
+      document.querySelector('.moon-icon').classList.toggle('hidden', savedTheme !== 'dark');
+    }
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      document.querySelector('.sun-icon').classList.toggle('hidden', next === 'dark');
+      document.querySelector('.moon-icon').classList.toggle('hidden', next !== 'dark');
+    });
+    initTheme();
+    
+    let html5QrcodeScanner = null;
+    let selectedDevice = null;
+    let isScanning = false;
+    let currentUser = null;
+    
+    // Check if user is logged in
+    if (Auth.init()) {
+      currentUser = Auth.user;
+      // Show elements for logged-in users
+      document.getElementById('manualSelectSection').style.display = 'block';
+      document.getElementById('backToDashboard').style.display = 'block';
+      document.getElementById('loginPrompt').style.display = 'none';
+    } else {
+      // Show login prompt for guests
+      document.getElementById('loginPrompt').style.display = 'block';
+      document.getElementById('manualSelectSection').style.display = 'none';
+      document.getElementById('backToDashboard').style.display = 'none';
+    }
+    
+    async function loadDevices() {
+      const devices = await DeviceManager.loadDevices();
+      const select = document.getElementById('deviceSelect');
+      devices.filter(d => d.status === 'active').forEach(device => {
+        const option = document.createElement('option');
+        option.value = device.id;
+        option.textContent = `${device.name} - ${device.location || 'N/A'}`;
+        select.appendChild(option);
+      });
+    }
+    
+    function checkUrlParams() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const deviceId = urlParams.get('device');
+      if (deviceId) loadDevice(deviceId);
+    }
+    
+    async function loadDevice(deviceId) {
+      try {
+        selectedDevice = await API.get(`/api/devices/${deviceId}`);
+        checkAuthAndShowForm();
+      } catch (error) {
+        Toast.error('Không tìm thấy thiết bị');
+      }
+    }
+    
+    function checkAuthAndShowForm() {
+      // Nếu thiết bị yêu cầu xác thực
+      if (selectedDevice.require_auth) {
+        // Nếu người dùng đã đăng nhập -> cho phép kiểm tra
+        if (currentUser) {
+          showInspectionForm(true);
+        } else {
+          // Nếu có mật khẩu -> hỏi mật khẩu
+          if (selectedDevice.inspection_password) {
+            showPasswordModal();
+          } else {
+            // Không có mật khẩu -> yêu cầu đăng nhập
+            Toast.error('Thiết bị này yêu cầu đăng nhập để kiểm tra');
+            setTimeout(() => {
+              window.location.href = `/?redirect=${encodeURIComponent(window.location.href)}`;
+            }, 1500);
+          }
+        }
+      } else {
+        // Không yêu cầu xác thực
+        showInspectionForm(!!currentUser);
+      }
+    }
+    
+    function showPasswordModal() {
+      const content = `
+        <form id="passwordForm">
+          <p style="color: var(--text-muted); margin-bottom: 16px;">Thiết bị này yêu cầu mật khẩu để kiểm tra.</p>
+          <div class="form-group">
+            <label class="form-label">Mật khẩu kiểm tra</label>
+            <input type="password" class="form-control" id="devicePassword" required autofocus>
+          </div>
+        </form>
+      `;
+      const footer = `
+        <button class="btn btn-secondary" onclick="Modal.close(); resetForm();">Hủy</button>
+        <button class="btn btn-primary" onclick="verifyPassword()">Xác nhận</button>
+      `;
+      Modal.create('Xác thực kiểm tra', content, footer);
+      
+      document.getElementById('passwordForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        verifyPassword();
+      });
+    }
+    
+    async function verifyPassword() {
+      const password = document.getElementById('devicePassword').value;
+      try {
+        await API.post(`/api/devices/${selectedDevice.id}/verify-password`, { password });
+        Modal.close();
+        Toast.success('Xác thực thành công!');
+        showInspectionForm(false);
+      } catch (error) {
+        Toast.error('Mật khẩu không đúng');
+      }
+    }
+    
+    function showInspectionForm(autoFillName = false) {
+      document.getElementById('mainContent').style.display = 'none';
+      document.getElementById('inspectionForm').style.display = 'block';
+      document.getElementById('successMessage').style.display = 'none';
+      
+      document.getElementById('deviceName').textContent = selectedDevice.name;
+      document.getElementById('deviceModel').textContent = selectedDevice.model || 'N/A';
+      document.getElementById('deviceSerial').textContent = selectedDevice.serial_number || 'N/A';
+      document.getElementById('deviceLocation').textContent = selectedDevice.location || 'N/A';
+      document.getElementById('deviceStatus').innerHTML = DeviceManager.getStatusBadge(selectedDevice.status);
+      
+      const nameInput = document.getElementById('inspectorName');
+      if (autoFillName && currentUser) {
+        nameInput.value = currentUser.full_name;
+        nameInput.readOnly = true;
+        nameInput.style.background = 'var(--bg-tertiary)';
+      } else {
+        nameInput.value = '';
+        nameInput.readOnly = false;
+        nameInput.style.background = '';
+      }
+      
+      stopScanner();
+    }
+    
+    function resetForm() {
+      selectedDevice = null;
+      document.getElementById('mainContent').style.display = 'block';
+      document.getElementById('inspectionForm').style.display = 'none';
+      document.getElementById('successMessage').style.display = 'none';
+      document.getElementById('checkForm').reset();
+      document.getElementById('deviceSelect').value = '';
+      document.getElementById('selectDeviceBtn').disabled = true;
+      document.querySelectorAll('.status-option').forEach(opt => opt.classList.remove('selected'));
+      document.getElementById('issuesGroup').style.display = 'none';
+      document.getElementById('inspectorName').readOnly = false;
+      document.getElementById('inspectorName').style.background = '';
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    
+    document.getElementById('toggleScanner').addEventListener('click', function() {
+      if (isScanning) stopScanner();
+      else startScanner();
+    });
+    
+    function startScanner() {
+      document.getElementById('qrScanner').style.display = 'block';
+      document.getElementById('scannerMessage').style.display = 'none';
+      document.getElementById('toggleScanner').textContent = 'Dừng quét';
+      isScanning = true;
+      
+      html5QrcodeScanner = new Html5Qrcode("reader");
+      html5QrcodeScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        onScanSuccess,
+        () => {}
+      );
+    }
+    
+    function stopScanner() {
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => {
+          document.getElementById('qrScanner').style.display = 'none';
+          document.getElementById('scannerMessage').style.display = 'block';
+          document.getElementById('toggleScanner').textContent = 'Bắt đầu quét';
+          isScanning = false;
+        });
+      }
+    }
+    
+    function onScanSuccess(decodedText) {
+      try {
+        const data = JSON.parse(decodedText);
+        if (data.id) loadDevice(data.id);
+      } catch (e) {
+        const match = decodedText.match(/device=([a-f0-9-]+)/);
+        if (match) loadDevice(match[1]);
+        else Toast.warning('Mã QR không hợp lệ');
+      }
+    }
+    
+    document.getElementById('deviceSelect').addEventListener('change', function() {
+      document.getElementById('selectDeviceBtn').disabled = !this.value;
+    });
+    
+    document.getElementById('selectDeviceBtn').addEventListener('click', function() {
+      const deviceId = document.getElementById('deviceSelect').value;
+      if (deviceId) loadDevice(deviceId);
+    });
+    
+    document.querySelectorAll('.status-option input').forEach(input => {
+      input.addEventListener('change', function() {
+        document.querySelectorAll('.status-option').forEach(opt => opt.classList.remove('selected'));
+        if (this.checked) this.parentElement.classList.add('selected');
+        const hasIssue = (this.value === 'issue' || this.value === 'critical');
+        document.getElementById('issuesGroup').style.display = hasIssue ? 'block' : 'none';
+        document.getElementById('imageUploadGroup').style.display = hasIssue ? 'block' : 'none';
+      });
+    });
+    
+    // Image upload handling
+    let uploadedImages = [];
+    
+    async function handleImageSelect(event) {
+      const files = event.target.files;
+      for (let file of files) {
+        await uploadImage(file);
+      }
+      event.target.value = '';
+    }
+    
+    async function uploadImage(file) {
+      Toast.info('Đang upload và resize ảnh...');
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const response = await fetch('/api/upload-image', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          uploadedImages.push(result.url);
+          updateImagePreview();
+          Toast.success('Upload thành công!');
+        } else {
+          Toast.error(result.message || 'Upload thất bại');
+        }
+      } catch (error) {
+        Toast.error('Lỗi upload: ' + error.message);
+      }
+    }
+    
+    function updateImagePreview() {
+      const container = document.getElementById('imagePreview');
+      const previewContainer = document.getElementById('imagePreviewContainer');
+      previewContainer.style.display = uploadedImages.length > 0 ? 'block' : 'none';
+      
+      container.innerHTML = uploadedImages.map((url, idx) => `
+        <div style="position: relative; display: inline-block;">
+          <img src="${url}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border-color);">
+          <button type="button" onclick="removeImage(${idx})" style="position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--danger-color); color: white; border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center;">×</button>
+        </div>
+      `).join('');
+    }
+    
+    function removeImage(idx) {
+      uploadedImages.splice(idx, 1);
+      updateImagePreview();
+    }
+    
+    function openCamera() {
+      const input = document.getElementById('imageInput');
+      input.setAttribute('capture', 'environment');
+      input.click();
+      setTimeout(() => input.removeAttribute('capture'), 1000);
+    }
+    
+    document.getElementById('checkForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const submitBtn = this.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner" style="width: 16px; height: 16px;"></span> Đang gửi...';
+      
+      const status = document.querySelector('input[name="status"]:checked').value;
+      const data = {
+        device_id: selectedDevice.id,
+        inspector_name: document.getElementById('inspectorName').value,
+        user_id: currentUser ? currentUser.id : null,
+        status: status,
+        issues: document.getElementById('issues').value,
+        notes: document.getElementById('notes').value,
+        images: (status === 'issue' || status === 'critical') ? uploadedImages : []
+      };
+      
+      try {
+        await InspectionManager.submitInspection(data);
+        uploadedImages = [];
+        document.getElementById('inspectionForm').style.display = 'none';
+        document.getElementById('successMessage').style.display = 'block';
+      } catch (error) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Xác nhận kiểm tra';
+      }
+    });
+    
+    loadDevices();
+    checkUrlParams();
+  </script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý User - Quản lý Thiết bị Y tế</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Navigation (rendered by navbar.js) -->
+    <div id="navbar-container"></div>
+    
+    <main class="main-content">
+      <div class="container">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h1>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                <path d="M16 3.13a4 4 0 010 7.75"/>
+              </svg>
+              Quản lý User
+            </h1>
+            <p>Quản lý tài khoản người dùng và phân quyền</p>
+          </div>
+          <button class="btn btn-primary btn-lg" onclick="showUserModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Thêm User
+          </button>
+        </div>
+        
+        <div class="card">
+          <div id="userList">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="/js/app.js"></script>
+  <script src="/js/navbar.js"></script>
+  <script>
+    // Theme
+    // Auth check - server-side verification (admin only)
+    (async function() {
+      const result = await Auth.verify();
+      if (!result.success) {
+        if (result.error === 'account_locked') {
+          alert(result.message);
+        }
+        window.location.href = '/';
+        return;
+      }
+      
+      // Check page access - only admin/inspector can access users page
+      const accessResult = await Auth.checkPageAccess('users.html');
+      if (!accessResult.allowed) {
+        alert(accessResult.message);
+        window.location.href = Auth.user.role === 'viewer' ? '/inspections.html' : '/dashboard.html';
+        return;
+      }
+      
+      // Initialize navbar with user
+      Navbar.init(Auth.user);
+      
+      // Load users after auth verified
+      loadUsers();
+    })();
+    
+    let users = [];
+    let departments = [];
+    
+    async function loadUsers() {
+      const url = Auth.user.role === 'inspector' 
+        ? `/api/users?department_id=${Auth.user.department_id}` 
+        : '/api/users';
+      users = await API.get(url);
+      
+      // Client-side backup filter to ensure strict isolation
+      if (Auth.user.role === 'inspector') {
+        users = users.filter(u => u.department_id == Auth.user.department_id);
+      }
+      
+      renderUsers();
+    }
+    
+    async function loadDepartments() {
+      departments = await API.get('/api/departments');
+    }
+    
+    // Initial load
+    loadDepartments();
+    
+    function renderUsers() {
+      const container = document.getElementById('userList');
+      if (users.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>Chưa có user nào</p></div>';
+        return;
+      }
+      
+      const roleLabels = { admin: 'Quản trị', inspector: 'Kiểm tra viên', viewer: 'Xem', technician: 'Kỹ thuật viên' };
+      
+      container.innerHTML = `
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Họ tên</th>
+                <th>Vai trò</th>
+                <th>Khoa phòng</th>
+                <th>SĐT</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${users.map(u => `
+                <tr>
+                  <td><strong>${u.username}</strong></td>
+                  <td>${u.full_name}</td>
+                  <td><span class="badge badge-info">${roleLabels[u.role] || u.role}</span></td>
+                  <td>${u.department_name || '<em style="color:var(--text-muted)">-</em>'}</td>
+                  <td>${u.phone || '-'}</td>
+                  <td>${u.active ? '<span class="badge badge-success">Hoạt động</span>' : '<span class="badge badge-danger">Khóa</span>'}</td>
+                  <td>
+                    <div class="table-actions">
+                      <button class="btn btn-icon btn-ghost" onclick='showUserModal(${JSON.stringify(u)})' title="Sửa">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                      ${u.id !== 1 ? `
+                        <button class="btn btn-icon btn-ghost" onclick="toggleUser(${u.id}, ${!u.active})" title="${u.active ? 'Khóa' : 'Mở khóa'}">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            ${u.active ? '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>' : '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 019.9-1"/>'}
+                          </svg>
+                        </button>
+                        <button class="btn btn-icon btn-ghost" style="color: var(--danger-color);" onclick="deleteUser(${u.id})" title="Xóa">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                          </svg>
+                        </button>
+                      ` : ''}
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+    
+    function showUserModal(user = null) {
+      const isEdit = user !== null;
+      const isInspector = Auth.user.role === 'inspector';
+      const myDeptId = Auth.user.department_id;
+      
+      // Filter roles: Inspectors cannot create/edit Admins, only viewers/technicians/other inspectors?
+      // User request: "only create user for their department". Implies managing their team.
+      // Let's assume they can assign any role except Admin.
+      
+      const content = `
+        <form id="userForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Username *</label>
+              <input type="text" class="form-control" name="username" value="${user?.username || ''}" required ${isEdit ? 'readonly' : ''}>
+            </div>
+            <div class="form-group">
+              <label class="form-label">${isEdit ? 'Mật khẩu mới' : 'Mật khẩu *'}</label>
+              <input type="password" class="form-control" name="password" ${isEdit ? '' : 'required'}>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Họ tên *</label>
+              <input type="text" class="form-control" name="full_name" value="${user?.full_name || ''}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vai trò</label>
+              <select class="form-control" name="role">
+                <option value="inspector" ${user?.role === 'inspector' ? 'selected' : ''}>Kiểm tra viên</option>
+                <option value="technician" ${user?.role === 'technician' ? 'selected' : ''}>Kỹ thuật viên</option>
+                ${!isInspector ? `<option value="admin" ${user?.role === 'admin' ? 'selected' : ''}>Quản trị viên</option>` : ''}
+                <option value="viewer" ${user?.role === 'viewer' ? 'selected' : ''}>Chỉ xem</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Số điện thoại</label>
+              <input type="text" class="form-control" name="phone" value="${user?.phone || ''}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Khoa phòng</label>
+              ${isInspector ? `
+                <input type="hidden" name="department_id" value="${myDeptId}">
+                <input type="text" class="form-control" value="${departments.find(d => d.id == myDeptId)?.name || 'Khoa của bạn'}" readonly disabled>
+              ` : `
+                <select class="form-control" name="department_id">
+                  <option value="">-- Chọn khoa phòng --</option>
+                  ${departments.map(d => `<option value="${d.id}" ${user?.department_id == d.id ? 'selected' : ''}>${d.name}</option>`).join('')}
+                </select>
+              `}
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Zalo User ID</label>
+              <input type="text" class="form-control" name="zalo_user_id" value="${user?.zalo_user_id || ''}" placeholder="Nhập ID từ Zalo Bot (/dangky)">
+            </div>
+          </div>
+          ${isEdit ? `
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="active" ${user?.active ? 'checked' : ''}>
+                <span>Hoạt động</span>
+              </label>
+            </div>
+          ` : ''}
+        </form>
+      `;
+      const footer = `
+        <button class="btn btn-secondary" onclick="Modal.close()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveUser(${user?.id || 'null'})">${isEdit ? 'Cập nhật' : 'Tạo User'}</button>
+      `;
+      Modal.create(isEdit ? 'Sửa User' : 'Thêm User mới', content, footer);
+    }
+    
+    async function saveUser(id) {
+      const form = document.getElementById('userForm');
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+      data.active = formData.get('active') === 'on';
+      
+      try {
+        if (id) {
+          await API.put(`/api/users/${id}`, data);
+          Toast.success('Cập nhật thành công!');
+        } else {
+          await API.post('/api/users', data);
+          Toast.success('Tạo user thành công!');
+        }
+        Modal.close();
+        loadUsers();
+      } catch (error) {
+        Toast.error(error.message);
+      }
+    }
+    
+    async function toggleUser(id, active) {
+      const user = users.find(u => u.id === id);
+      await API.put(`/api/users/${id}`, { ...user, active });
+      Toast.success(active ? 'Đã mở khóa user' : 'Đã khóa user');
+      loadUsers();
+    }
+    
+    async function deleteUser(id) {
+      if (!confirm('Bạn có chắc muốn xóa user này?')) return;
+      await API.delete(`/api/users/${id}`);
+      Toast.success('Đã xóa user');
+      loadUsers();
+    }
+  </script>
+</body>
+</html>

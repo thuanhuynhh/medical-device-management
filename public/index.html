@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Đăng nhập - Quản lý Thiết bị Y tế">
+  <title>Đăng nhập - Quản lý Thiết bị Y tế</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="logo">
+          <img src="/images/logo.png" alt="Logo" id="siteLogo" style="width: 64px; height: 64px; object-fit: contain;">
+        </div>
+        <h1 id="siteTitle">Quản lý Thiết bị Y tế</h1>
+        <p id="siteSubtitle">Khoa Chẩn đoán Hình ảnh</p>
+      </div>
+      
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label">Tên đăng nhập</label>
+          <input type="text" class="form-control" id="username" placeholder="Nhập tên đăng nhập" required autofocus>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Mật khẩu</label>
+          <input type="password" class="form-control" id="password" placeholder="Nhập mật khẩu" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+          Đăng nhập
+        </button>
+      </form>
+      
+      <div style="margin-top: 20px; text-align: center;">
+        <button class="btn btn-ghost btn-sm" id="themeToggle" style="gap: 6px;">
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg class="moon-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+          <span class="theme-text">Chế độ tối</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/js/app.js"></script>
+  <script>
+    // Theme
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeIcon(savedTheme);
+    }
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      updateThemeIcon(next);
+    }
+    function updateThemeIcon(theme) {
+      const sunIcon = document.querySelector('.sun-icon');
+      const moonIcon = document.querySelector('.moon-icon');
+      const themeText = document.querySelector('.theme-text');
+      if (theme === 'dark') {
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+        if (themeText) themeText.textContent = 'Chế độ sáng';
+      } else {
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+        if (themeText) themeText.textContent = 'Chế độ tối';
+      }
+    }
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    initTheme();
+    
+    // Load branding
+    (async function loadBranding() {
+      try {
+        const response = await fetch('/api/config');
+        const config = await response.json();
+        if (config.custom_logo) {
+          document.getElementById('siteLogo').src = config.custom_logo;
+        }
+        if (config.site_title) {
+          document.getElementById('siteTitle').textContent = config.site_title;
+          document.title = 'Đăng nhập - ' + config.site_title;
+        }
+        if (config.site_subtitle) {
+          document.getElementById('siteSubtitle').textContent = config.site_subtitle;
+        }
+      } catch (e) {}
+    })();
+    
+    // Check if already logged in - verify with server and redirect based on role
+    (async function() {
+      const result = await Auth.verify();
+      if (result.success) {
+        // Redirect based on role
+        if (Auth.user.role === 'viewer') {
+          window.location.href = '/inspections.html';
+        } else if (Auth.user.role === 'technician') {
+          window.location.href = '/tickets.html';
+        } else {
+          window.location.href = '/dashboard.html';
+        }
+      }
+    })();
+    
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner" style="width: 18px; height: 18px; margin-right: 8px;"></span> Đang đăng nhập...';
+      
+      try {
+        const result = await Auth.login(username, password);
+        if (result.success) {
+          Toast.success('Đăng nhập thành công!');
+          setTimeout(() => {
+            // Redirect based on role
+            if (result.user.role === 'viewer') {
+              window.location.href = '/inspections.html';
+            } else if (result.user.role === 'technician') {
+              window.location.href = '/tickets.html';
+            } else {
+              window.location.href = '/dashboard.html';
+            }
+          }, 500);
+        }
+      } catch (error) {
+        Toast.error(error.message || 'Sai tên đăng nhập hoặc mật khẩu');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Đăng nhập';
+      }
+    });
+  </script>
+</body>
+</html>
