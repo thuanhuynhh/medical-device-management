@@ -2,7 +2,8 @@
 
 > **Ứng dụng giúp các khoa phòng bệnh viện quản lý thiết bị y tế một cách đơn giản và hiệu quả**
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/thuanhuynhh/medical-device-management)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/DYcXwb?referralCode=thuanhuynhh)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/thuanhuynhh/medical-device-management)
 
 ---
 
@@ -18,20 +19,58 @@
 
 ---
 
-## 🚀 Cài đặt nhanh (1 Click)
+## 🚀 Triển khai lên Cloud (Miễn phí)
 
-### Triển khai lên Vercel (Miễn phí)
+### Tùy chọn 1: Railway (Khuyến nghị ⭐)
 
-Nhấn nút bên dưới để tự động cài đặt ứng dụng lên máy chủ Vercel của bạn:
+Railway là lựa chọn tốt nhất cho ứng dụng này vì hỗ trợ SQLite và persistent storage.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/thuanhuynhh/medical-device-management)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/DYcXwb?referralCode=thuanhuynhh)
+
+**Ưu điểm:**
+
+- ✅ Miễn phí $5 credit/tháng (đủ cho ứng dụng nhỏ)
+- ✅ Hỗ trợ SQLite với persistent volume
+- ✅ Tự động deploy khi push code
+- ✅ Custom domain miễn phí
 
 **Các bước:**
 
-1. Nhấn nút **"Deploy with Vercel"** ở trên
-2. Đăng nhập bằng tài khoản GitHub (miễn phí)
-3. Nhấn **"Deploy"** và chờ khoảng 1-2 phút
-4. Hoàn tất! Truy cập đường link được cung cấp
+1. Nhấn nút **"Deploy on Railway"** ở trên
+2. Đăng nhập bằng GitHub
+3. Nhấn **"Deploy Now"** và chờ 2-3 phút
+4. Truy cập đường link được cung cấp
+
+---
+
+### Tùy chọn 2: Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/thuanhuynhh/medical-device-management)
+
+**Ưu điểm:**
+
+- ✅ Free tier (có giới hạn)
+- ✅ Persistent disk cho database
+- ✅ SSL miễn phí
+
+**Các bước:**
+
+1. Nhấn nút **"Deploy to Render"** ở trên
+2. Đăng nhập bằng GitHub
+3. Chọn **Free** plan
+4. Nhấn **"Create Web Service"**
+
+> ⚠️ **Lưu ý**: Render free tier sẽ sleep sau 15 phút không hoạt động
+
+---
+
+### ❌ Không hỗ trợ Vercel
+
+Ứng dụng này **không tương thích với Vercel** vì:
+
+- Vercel là serverless platform với read-only filesystem
+- SQLite cần ghi file vào disk
+- File uploads cần persistent storage
 
 ---
 

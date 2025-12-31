@@ -12,10 +12,18 @@ const tinify = require("tinify");
 const ZaloBot = require("./zalobot");
 
 // TinyPNG API Key
-tinify.key = "yQIhBlBVnVTaoXAHPOXbAj3orc1F7tZ8";
+tinify.key = process.env.TINYPNG_API_KEY || "yQIhBlBVnVTaoXAHPOXbAj3orc1F7tZ8";
+
+// Data directory for persistent storage (Railway, Render, etc.)
+const dataDir = process.env.DATA_DIR || __dirname;
+if (dataDir !== __dirname && !fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
 
 // Multer setup for file upload
-const uploadsDir = path.join(__dirname, "public", "uploads");
+const uploadsDir = process.env.DATA_DIR 
+  ? path.join(dataDir, "uploads") 
+  : path.join(__dirname, "public", "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -41,8 +49,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// Database setup
-const db = new Database("devices.db");
+// Serve uploads from DATA_DIR if configured
+if (process.env.DATA_DIR) {
+  app.use('/uploads', express.static(uploadsDir));
+}
+
+// Database setup - use DATA_DIR if available for persistent storage
+const dbPath = path.join(dataDir, "devices.db");
+const db = new Database(dbPath);
 
 // Create/Update tables
 db.exec(`
