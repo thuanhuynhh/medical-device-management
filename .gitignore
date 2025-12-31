@@ -42,8 +42,9 @@ tmp/
 temp/
 *.tmp
 
-# Agent/AI assistant files (optional - remove if you want to share workflows)
+# Agent/AI assistant files
 .agent/
+.shared/
 
 # Package lock (optional - some projects include this)
 # package-lock.json
