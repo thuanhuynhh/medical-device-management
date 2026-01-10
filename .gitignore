@@ -6,6 +6,7 @@ node_modules/
 *.sqlite
 *.sqlite3
 devices.db
+data/
 
 # Environment variables
 .env
@@ -15,6 +16,7 @@ devices.db
 
 # User uploaded files
 public/uploads/
+uploads/
 
 # Logs
 logs/
@@ -33,9 +35,15 @@ desktop.ini
 *.swo
 *~
 
-# Build outputs
+# Build outputs (pkg)
 dist/
 build/
+
+# Electron build outputs
+dist-electron/
+win-unpacked/
+*.blockmap
+*.__uninstaller.exe
 
 # Temporary files
 tmp/
@@ -45,6 +53,12 @@ temp/
 # Agent/AI assistant files
 .agent/
 .shared/
+
+# nport source (if copied)
+nport-main/
+
+# Systray module (disabled)
+systray.js
 
 # Package lock (optional - some projects include this)
 # package-lock.json

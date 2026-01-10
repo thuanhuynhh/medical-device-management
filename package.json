@@ -1,17 +1,40 @@
 {
-  "name": "device-management",
+  "name": "vicas-device-management",
   "version": "1.0.0",
-  "description": "Hệ thống quản lý thiết bị y tế - Khoa Chẩn đoán hình ảnh",
-  "main": "server.js",
+  "description": "VICAS - Hệ thống quản lý thiết bị y tế",
+  "main": "main.js",
+  "bin": "server.js",
   "engines": {
     "node": ">=20.0.0"
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "electron": "electron .",
+    "build": "node build.js",
+    "build:exe": "npx @yao-pkg/pkg . --target node22-win-x64 --output dist/VICAS.exe",
+    "build:electron": "electron-builder --config electron-builder.json"
   },
-  "keywords": [],
-  "author": "",
+  "pkg": {
+    "scripts": [
+      "server.js",
+      "zalobot.js"
+    ],
+    "assets": [
+      "public/**/*",
+      "node_modules/**/*"
+    ],
+    "targets": [
+      "node22-win-x64"
+    ],
+    "outputPath": "dist"
+  },
+  "keywords": [
+    "medical",
+    "device-management",
+    "vicas"
+  ],
+  "author": "VICAS Medical",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
@@ -20,6 +43,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "express": "^5.2.1",
+    "localtunnel": "^2.0.2",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
     "qrcode": "^1.5.4",
@@ -27,5 +51,10 @@
     "tinify": "^1.8.2",
     "uuid": "^13.0.0",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.11.0",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.4.0"
   }
 }

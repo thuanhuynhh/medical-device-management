@@ -9,21 +9,56 @@ const XLSX = require("xlsx");
 const cron = require("node-cron");
 const multer = require("multer");
 const tinify = require("tinify");
+const { spawn, exec } = require("child_process");
 const ZaloBot = require("./zalobot");
+// SystemTray disabled - native modules don't work with pkg
+
+// Helper function to open URL in default browser (Windows)
+function openBrowser(url) {
+  try {
+    exec(`start "" "${url}"`, (err) => {
+      if (err) {
+        console.log(`   Could not auto-open browser. Please open ${url} manually.`);
+      }
+    });
+  } catch (e) {
+    console.log(`   Please open ${url} manually`);
+  }
+}
+
+// ============ PACKAGING SUPPORT ============
+// Detect if running as packaged executable
+const isPackaged = typeof process.pkg !== 'undefined';
+
+// Get the base directory (where the exe is located or project root)
+const getBaseDir = () => {
+  if (isPackaged) {
+    return path.dirname(process.execPath);
+  }
+  return __dirname;
+};
+
+const baseDir = getBaseDir();
+
+// Tunnel state
+let tunnelInfo = {
+  url: null,
+  subdomain: null,
+  connected: false,
+  process: null
+};
 
 // TinyPNG API Key
 tinify.key = process.env.TINYPNG_API_KEY || "yQIhBlBVnVTaoXAHPOXbAj3orc1F7tZ8";
 
-// Data directory for persistent storage (Railway, Render, etc.)
-const dataDir = process.env.DATA_DIR || __dirname;
-if (dataDir !== __dirname && !fs.existsSync(dataDir)) {
+// Data directory for persistent storage
+const dataDir = process.env.DATA_DIR || path.join(baseDir, "data");
+if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
 // Multer setup for file upload
-const uploadsDir = process.env.DATA_DIR 
-  ? path.join(dataDir, "uploads") 
-  : path.join(__dirname, "public", "uploads");
+const uploadsDir = path.join(dataDir, "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -47,14 +82,29 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
 
-// Serve uploads from DATA_DIR if configured
-if (process.env.DATA_DIR) {
-  app.use('/uploads', express.static(uploadsDir));
-}
+// Static files configuration
+// When packaged: public/ is embedded in exe, accessed via __dirname (snapshot)
+// When dev: public/ is in project folder
+const publicDir = path.join(__dirname, "public");
 
-// Database setup - use DATA_DIR if available for persistent storage
+// Logo customization: serve custom logo from data/ if exists
+const customLogoPath = path.join(dataDir, "logo.png");
+app.get('/images/logo.png', (req, res, next) => {
+  if (fs.existsSync(customLogoPath)) {
+    res.sendFile(customLogoPath);
+  } else {
+    next(); // Fall through to static middleware
+  }
+});
+
+// Serve static files (embedded in exe when packaged)
+app.use(express.static(publicDir));
+
+// Serve uploads from data directory
+app.use('/uploads', express.static(uploadsDir));
+
+// Database setup
 const dbPath = path.join(dataDir, "devices.db");
 const db = new Database(dbPath);
 
@@ -176,6 +226,7 @@ try { db.exec("ALTER TABLE devices ADD COLUMN category_id INTEGER"); } catch(e) 
 try { db.exec("ALTER TABLE devices ADD COLUMN require_auth INTEGER DEFAULT 0"); } catch(e) {}
 try { db.exec("ALTER TABLE devices ADD COLUMN inspection_password TEXT"); } catch(e) {}
 try { db.exec("ALTER TABLE devices ADD COLUMN department_id INTEGER"); } catch(e) {}
+try { db.exec("ALTER TABLE devices ADD COLUMN inspection_frequency TEXT DEFAULT 'monthly'"); } catch(e) {}
 try { db.exec("ALTER TABLE users ADD COLUMN phone TEXT"); } catch(e) {}
 try { db.exec("ALTER TABLE users ADD COLUMN active INTEGER DEFAULT 1"); } catch(e) {}
 try { db.exec("ALTER TABLE users ADD COLUMN department_id INTEGER"); } catch(e) {}
@@ -185,11 +236,26 @@ try { db.exec("ALTER TABLE inspections ADD COLUMN user_id INTEGER"); } catch(e) 
 try { db.exec("ALTER TABLE zalo_subscribers ADD COLUMN department_id INTEGER"); } catch(e) {}
 try { db.exec("ALTER TABLE scheduled_reports ADD COLUMN department_id INTEGER"); } catch(e) {}
 
-// Insert default admin user if not exists
-const adminExists = db.prepare("SELECT id FROM users WHERE username = ?").get("admin");
-if (!adminExists) {
-  db.prepare("INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?)").run("admin", "admin123", "Quản trị viên", "admin");
-}
+// Check if first-time setup is needed (no admin user exists)
+const isFirstTimeSetup = () => {
+  const admin = db.prepare("SELECT id FROM users WHERE role = 'admin'").get();
+  return !admin;
+};
+
+// Generate random subdomain
+const generateSubdomain = () => {
+  return 'vicas-' + Math.floor(100000 + Math.random() * 900000);
+};
+
+// Get saved subdomain or generate new one
+const getSubdomain = () => {
+  const saved = db.prepare("SELECT value FROM system_config WHERE key = ?").get('tunnel_subdomain');
+  if (saved && saved.value) return saved.value;
+  
+  const newSubdomain = generateSubdomain();
+  db.prepare("INSERT OR REPLACE INTO system_config (key, value) VALUES (?, ?)").run('tunnel_subdomain', newSubdomain);
+  return newSubdomain;
+};
 
 // Insert default categories if not exist
 const categoryCount = db.prepare("SELECT COUNT(*) as count FROM device_categories").get().count;
@@ -204,6 +270,95 @@ if (categoryCount === 0) {
   const insertCat = db.prepare("INSERT INTO device_categories (name, description, color) VALUES (?, ?, ?)");
   categories.forEach(cat => insertCat.run(cat.name, cat.description, cat.color));
 }
+
+// ============ SETUP ROUTES ============
+// Redirect to setup page if first-time
+app.use((req, res, next) => {
+  // Skip API routes and static files
+  if (req.path.startsWith('/api/') || 
+      req.path.startsWith('/css/') || 
+      req.path.startsWith('/js/') || 
+      req.path.startsWith('/images/') ||
+      req.path === '/setup.html') {
+    return next();
+  }
+  
+  // If first-time setup and not on setup page, redirect
+  if (isFirstTimeSetup() && req.path !== '/setup.html') {
+    return res.redirect('/setup.html');
+  }
+  
+  next();
+});
+
+// Check setup status
+app.get("/api/setup/status", (req, res) => {
+  res.json({ 
+    needsSetup: isFirstTimeSetup(),
+    tunnelConnected: tunnelInfo.connected,
+    tunnelUrl: tunnelInfo.url
+  });
+});
+
+// Create admin account (first-time setup only)
+app.post("/api/setup/admin", (req, res) => {
+  if (!isFirstTimeSetup()) {
+    return res.status(400).json({ success: false, message: "Hệ thống đã được cài đặt" });
+  }
+  
+  const { full_name, username, password, subdomain } = req.body;
+  
+  if (!full_name || !username || !password) {
+    return res.status(400).json({ success: false, message: "Vui lòng điền đầy đủ thông tin" });
+  }
+  
+  if (password.length < 6) {
+    return res.status(400).json({ success: false, message: "Mật khẩu phải có ít nhất 6 ký tự" });
+  }
+  
+  try {
+    // Create admin user
+    db.prepare("INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?)").run(username, password, full_name, 'admin');
+    
+    // Save subdomain if provided
+    if (subdomain) {
+      db.prepare("INSERT OR REPLACE INTO system_config (key, value) VALUES (?, ?)").run('tunnel_subdomain', subdomain);
+    }
+    
+    // Build the expected tunnel URL based on subdomain
+    const savedSubdomain = subdomain || getSubdomain();
+    const expectedTunnelUrl = `https://${savedSubdomain}.nport.link`;
+    
+    // Save to domain_url for QR code
+    db.prepare("INSERT OR REPLACE INTO system_config (key, value) VALUES (?, ?)").run('domain_url', expectedTunnelUrl);
+    
+    res.json({ 
+      success: true, 
+      message: "Cài đặt thành công",
+      tunnelUrl: expectedTunnelUrl,
+      subdomain: savedSubdomain
+    });
+    
+    // Start tunnel with the new subdomain after setup completes
+    console.log('');
+    console.log(`🔄 Khởi động tunnel với subdomain: ${savedSubdomain}...`);
+    initTunnel().catch(err => {
+      console.error('❌ Tunnel startup error:', err.message);
+    });
+    
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get tunnel info
+app.get("/api/tunnel/info", (req, res) => {
+  res.json({
+    connected: tunnelInfo.connected,
+    url: tunnelInfo.url,
+    subdomain: tunnelInfo.subdomain || getSubdomain()
+  });
+});
 
 // ============ AUTH ROUTES ============
 app.post("/api/login", (req, res) => {
@@ -1109,22 +1264,247 @@ function checkSchedules() {
 // Run scheduler every minute
 cron.schedule("* * * * *", checkSchedules);
 
-// ============ START SERVER ============
+// Initialize tunnel using nport API (https://nport.link)
+let tunnelProcess = null;
+let tunnelId = null;
+
+const NPORT_CONFIG = {
+  BACKEND_URL: "https://nport.tuanngocptn.workers.dev",
+  TIMEOUT_HOURS: 4
+};
+
+async function initTunnel() {
+  const subdomain = getSubdomain();
+  
+  console.log(`🔄 Starting tunnel with subdomain: ${subdomain}...`);
+  
+  // Find cloudflared binary
+  let cloudflaredPath;
+  if (isPackaged) {
+    cloudflaredPath = path.join(baseDir, 'bin', 'cloudflared.exe');
+  } else {
+    // In development, try global nport or system cloudflared
+    cloudflaredPath = 'cloudflared';
+  }
+  
+  // Check if cloudflared exists (when packaged)
+  if (isPackaged && !fs.existsSync(cloudflaredPath)) {
+    console.log('⚠️ Tunnel: cloudflared.exe not found in bin/ folder.');
+    console.log('   Download from: https://github.com/cloudflare/cloudflared/releases');
+    console.log('   Place cloudflared.exe in the bin/ folder next to VICAS.exe');
+    console.log('   The application will work locally only.');
+    return;
+  }
+  
+  try {
+    // Step 1: Call nport API to create tunnel and get token
+    const axios = require('axios');
+    console.log('   Requesting tunnel from nport.link...');
+    
+    const response = await axios.post(NPORT_CONFIG.BACKEND_URL, { subdomain }, {
+      timeout: 30000
+    });
+    
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Unknown error from nport backend');
+    }
+    
+    const { tunnelId: tid, tunnelToken, url } = response.data;
+    tunnelId = tid;
+    
+    console.log(`✅ Tunnel created!`);
+    console.log(`🌐 Public URL: ${url}`);
+    console.log(`📱 QR Scanner: ${url}/inspect.html`);
+    console.log(`   (Auto-cleanup in ${NPORT_CONFIG.TIMEOUT_HOURS} hours)`);
+    
+    // Save tunnel URL to database
+    tunnelInfo.url = url;
+    tunnelInfo.subdomain = subdomain;
+    tunnelInfo.connected = true;
+    db.prepare("INSERT OR REPLACE INTO system_config (key, value) VALUES (?, ?)").run('domain_url', url);
+    
+    // Step 2: Spawn cloudflared with the token
+    console.log('   Connecting to global network...');
+    
+    const args = ['tunnel', 'run', '--token', tunnelToken, '--url', `http://localhost:${PORT}`];
+    
+    tunnelProcess = spawn(cloudflaredPath, args, {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: !isPackaged
+    });
+    
+    let connectionCount = 0;
+    const connectionMessages = [
+      "✔ Connection established [1/4] - Establishing redundancy...",
+      "✔ Connection established [2/4] - Building tunnel network...",
+      "✔ Connection established [3/4] - Almost there...",
+      "✔ Connection established [4/4] - Tunnel is fully active! 🚀"
+    ];
+    
+    tunnelProcess.stderr.on('data', (data) => {
+      const output = data.toString();
+      
+      // Skip harmless warnings
+      const ignorePatterns = [
+        'Cannot determine default origin certificate path',
+        'No file cert.pem',
+        'origincert option',
+        'TUNNEL_ORIGIN_CERT',
+        'context canceled',
+        'failed to run the datagram handler',
+        'Connection terminated',
+        'Retrying connection'
+      ];
+      
+      if (ignorePatterns.some(p => output.includes(p))) return;
+      
+      // Show connection progress
+      if (output.includes('Registered tunnel connection')) {
+        if (connectionCount < 4) {
+          console.log(connectionMessages[connectionCount]);
+          connectionCount++;
+        }
+        return;
+      }
+      
+      // Show errors
+      if (output.includes('ERR') || output.includes('error')) {
+        console.error(`⚠️ Tunnel: ${output.trim()}`);
+      }
+    });
+    
+    tunnelProcess.on('close', async (code) => {
+      if (code !== 0 && code !== null) {
+        console.log(`⚠️ Tunnel process exited with code ${code}`);
+      }
+      tunnelInfo.connected = false;
+      
+      // Cleanup tunnel on nport backend
+      if (tunnelId) {
+        try {
+          await axios.delete(NPORT_CONFIG.BACKEND_URL, {
+            data: { subdomain, tunnelId }
+          });
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+      }
+      tunnelProcess = null;
+    });
+    
+    tunnelProcess.on('error', (err) => {
+      console.error(`❌ Failed to start tunnel: ${err.message}`);
+      if (err.code === 'ENOENT') {
+        console.log('💡 cloudflared not found.');
+        console.log('   Download from: https://github.com/cloudflare/cloudflared/releases');
+      }
+      tunnelInfo.connected = false;
+    });
+    
+  } catch (error) {
+    if (error.response?.data?.error) {
+      const errorMsg = error.response.data.error;
+      if (errorMsg.includes('SUBDOMAIN_IN_USE') || errorMsg.includes('already in use')) {
+        console.error(`❌ Subdomain "${subdomain}" is already in use!`);
+        console.log(`💡 Try a different subdomain in Settings page.`);
+      } else {
+        console.error(`❌ Tunnel error: ${errorMsg}`);
+      }
+    } else {
+      console.error(`❌ Tunnel error: ${error.message}`);
+    }
+  }
+}
+
+// Cleanup tunnel on shutdown
+async function cleanupTunnel() {
+  if (tunnelProcess) {
+    tunnelProcess.kill();
+  }
+  
+  if (tunnelId) {
+    try {
+      const axios = require('axios');
+      const subdomain = getSubdomain();
+      await axios.delete(NPORT_CONFIG.BACKEND_URL, {
+        data: { subdomain, tunnelId }
+      });
+      console.log('✔ Tunnel cleanup successful.');
+    } catch (e) {
+      // Ignore
+    }
+  }
+}
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Shutting down...');
+  await cleanupTunnel();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await cleanupTunnel();
+  process.exit(0);
+});
+
 app.listen(PORT, async () => {
-  console.log(`🏥 Server đang chạy tại http://localhost:${PORT}`);
-  console.log(`📱 Quét QR tại: http://localhost:${PORT}/inspect.html`);
-  console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard.html`);
+  console.log('');
+  console.log('============================================================');
+  console.log('     VICAS Device Management System - Starting...           ');
+  console.log('============================================================');
+  console.log('');
+  console.log(`[*] Local: http://localhost:${PORT}`);
+  
+  const isFirstTime = isFirstTimeSetup();
+  const isElectron = process.env.ELECTRON_RUN_AS_NODE === '1';
+  
+  // Check if first-time setup
+  if (isFirstTime) {
+    console.log('');
+    console.log('[!] First-time setup required!');
+    console.log(`[>] Open: http://localhost:${PORT}/setup.html`);
+    
+    // Auto-open browser for first-time setup (not in Electron)
+    if (!isElectron) {
+      openBrowser(`http://localhost:${PORT}/setup.html`);
+    }
+  } else {
+    console.log(`[i] Dashboard: http://localhost:${PORT}/dashboard.html`);
+    
+    // Auto-open browser to homepage (not in Electron)
+    if (!isElectron) {
+      openBrowser(`http://localhost:${PORT}`);
+    }
+  }
   
   // Initialize ZaloBot with database for persistent subscribers
   ZaloBot.init(db);
   
   const botInfo = await ZaloBot.testConnection();
   if (botInfo) {
-    console.log(`💬 Zalo Bot connected: ${botInfo.account_name}`);
+    console.log(`[+] Zalo Bot connected: ${botInfo.account_name}`);
     ZaloBot.startPolling();
   } else {
-    console.log(`⚠️ Zalo Bot chưa kết nối. Kiểm tra BOT_TOKEN.`);
+    console.log(`[!] Zalo Bot chua ket noi. Kiem tra BOT_TOKEN.`);
   }
   
-  console.log(`⏰ Scheduled reports: Active`);
+  // Only initialize tunnel if setup is complete (not first-time)
+  if (!isFirstTime) {
+    await initTunnel();
+  } else {
+    console.log('');
+    console.log('[~] Tunnel se khoi dong sau khi hoan tat cai dat...');
+  }
+  
+  console.log('');
+  console.log('[*] Scheduled reports: Active');
+  console.log('[OK] Server is ready!');
+  console.log('');
+  
+  // System Tray disabled - native modules don't work well with pkg packaging
+  // TODO: Consider alternative approaches like Electron or native Windows app wrapper
+  console.log('[i] Tip: Dong cua so nay se dung server');
+  console.log('    Mo browser: http://localhost:' + PORT);
 });
+

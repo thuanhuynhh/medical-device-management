@@ -1,0 +1,57 @@
+{
+  "appId": "com.vicas.device-management",
+  "productName": "Quan ly thiet bi y te - VICAS.vn",
+  "directories": {
+    "output": "dist-electron"
+  },
+  "files": [
+    "main.js",
+    "server.js",
+    "zalobot.js",
+    "public/**/*",
+    "node_modules/**/*",
+    "!node_modules/@yao-pkg/**",
+    "!node_modules/electron/**",
+    "!node_modules/electron-builder/**"
+  ],
+  "extraResources": [
+    {
+      "from": "public/images/vicas.ico",
+      "to": "data/vicas.ico"
+    },
+    {
+      "from": "public/images/logo.png",
+      "to": "data/logo.png"
+    }
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "public/images/vicas.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "installerIcon": "public/images/vicas.ico",
+    "uninstallerIcon": "public/images/vicas.ico",
+    "installerHeaderIcon": "public/images/vicas.ico",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "VICAS"
+  },
+  "portable": {
+    "artifactName": "${productName}-${version}-portable.${ext}"
+  },
+  "asar": false,
+  "extraMetadata": {
+    "main": "main.js"
+  }
+}
