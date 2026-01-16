@@ -11,6 +11,7 @@ const multer = require("multer");
 const tinify = require("tinify");
 const { spawn, exec } = require("child_process");
 const ZaloBot = require("./zalobot");
+const { seedData } = require("./seed-data");
 // SystemTray disabled - native modules don't work with pkg
 
 // Helper function to open URL in default browser (Windows)
@@ -306,7 +307,7 @@ app.post("/api/setup/admin", (req, res) => {
     return res.status(400).json({ success: false, message: "Hệ thống đã được cài đặt" });
   }
   
-  const { full_name, username, password, subdomain } = req.body;
+  const { full_name, username, password, subdomain, import_demo_data } = req.body;
   
   if (!full_name || !username || !password) {
     return res.status(400).json({ success: false, message: "Vui lòng điền đầy đủ thông tin" });
@@ -329,8 +330,14 @@ app.post("/api/setup/admin", (req, res) => {
     const savedSubdomain = subdomain || getSubdomain();
     const expectedTunnelUrl = `https://${savedSubdomain}.nport.link`;
     
-    // Save to domain_url for QR code
+// Save to domain_url for QR code
     db.prepare("INSERT OR REPLACE INTO system_config (key, value) VALUES (?, ?)").run('domain_url', expectedTunnelUrl);
+    
+    // Import demo data if requested
+    if (import_demo_data) {
+      console.log('📥 Importing demo data...');
+      seedData(db);
+    }
     
     res.json({ 
       success: true, 
@@ -1448,6 +1455,8 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
+
+
 app.listen(PORT, async () => {
   console.log('');
   console.log('============================================================');
@@ -1507,4 +1516,6 @@ app.listen(PORT, async () => {
   console.log('[i] Tip: Dong cua so nay se dung server');
   console.log('    Mo browser: http://localhost:' + PORT);
 });
+
+
 

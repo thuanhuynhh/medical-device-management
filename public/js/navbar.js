@@ -47,7 +47,8 @@ const Navbar = {
 
     const footer = document.createElement('footer');
     footer.className = 'main-footer';
-    footer.innerHTML = '<p>Copyrights (c) 2026 All rights reserved</p>';
+    const copyrightSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-bottom: 2px;"><circle cx="12" cy="12" r="10"></circle><path d="M14.83 14.83a4 4 0 1 1 0-5.66"></path></svg>`;
+    footer.innerHTML = `<p>Copyrights ${copyrightSvg} 2026 <a href="https://vicas.vn" target="_blank">VICAS.vn</a> All rights reserved</p>`;
     
     // Try to append to page-wrapper for correct layout, fallback to body
     const wrapper = document.querySelector('.page-wrapper');

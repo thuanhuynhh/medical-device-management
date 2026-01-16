@@ -408,8 +408,54 @@
         }
       }
 
-      .hidden {
+.hidden {
         display: none !important;
+      }
+
+      .demo-data-section {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+      }
+
+      .checkbox-label {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        cursor: pointer;
+        margin-bottom: 12px;
+      }
+
+      .checkbox-label input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--primary);
+        cursor: pointer;
+        margin: 0;
+      }
+
+      .checkbox-text {
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+
+      .demo-info {
+        margin-left: 32px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(148, 163, 184, 0.1);
+      }
+
+      .demo-info p {
+        color: var(--text-secondary);
+        font-size: 12px;
+        margin: 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
       }
 
       @media (max-width: 480px) {
@@ -445,13 +491,13 @@
 
         <!-- Step 1: Domain Setup -->
         <div id="domainSection">
-          <h3 class="section-title">Cấu hình Domain</h3>
+          <h3 class="section-title">Cấu hình Tên miền</h3>
           <p class="section-subtitle">
             Đây là địa chỉ công khai để truy cập hệ thống
           </p>
 
           <div class="domain-preview">
-            <label>Domain của bạn</label>
+            <label>Tên miền của bạn</label>
             <div class="domain-value" id="domainDisplay">Đang tải...</div>
             <div class="domain-edit">
               <input
@@ -517,7 +563,7 @@
               />
             </div>
 
-            <div class="form-group">
+<div class="form-group">
               <label>Xác nhận mật khẩu</label>
               <input
                 type="password"
@@ -525,6 +571,21 @@
                 placeholder="••••••••"
                 required
               />
+            </div>
+
+            <div class="form-group">
+              <div class="demo-data-section">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="importDemoData" checked>
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">Import dữ liệu demo (thiết bị y tế và lịch sử kiểm tra)</span>
+                </label>
+                <div class="demo-info">
+                  <p>📱 10 thiết bị y tế mẫu</p>
+                  <p>📋 150+ lịch sử kiểm tra</p>
+                  <p>🏥 Phòng Chẩn đoán hình ảnh</p>
+                </div>
+              </div>
             </div>
 
             <button type="submit" class="btn btn-primary" id="submitBtn">
@@ -545,7 +606,7 @@
           <p>Hệ thống đã sẵn sàng sử dụng</p>
 
           <div class="url-box">
-            <label>Truy cập từ bên ngoài</label>
+            <label>Truy cập từ bên ngoài (Sau 10 giây nữa)</label>
             <a href="#" id="publicUrl" target="_blank"></a>
           </div>
 
@@ -641,11 +702,12 @@
         .addEventListener("submit", async (e) => {
           e.preventDefault();
 
-          const fullName = document.getElementById("fullName").value.trim();
+const fullName = document.getElementById("fullName").value.trim();
           const username = document.getElementById("username").value.trim();
           const password = document.getElementById("password").value;
           const confirmPassword =
             document.getElementById("confirmPassword").value;
+          const importDemoData = document.getElementById("importDemoData").checked;
 
           // Validation
           if (password !== confirmPassword) {
@@ -667,11 +729,12 @@
             const res = await fetch("/api/setup/admin", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
+body: JSON.stringify({
                 full_name: fullName,
                 username,
                 password,
                 subdomain: currentDomain,
+                import_demo_data: importDemoData,
               }),
             });
 

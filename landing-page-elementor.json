@@ -1,0 +1,857 @@
+{
+  "title": "Landing Page - Quản lý Thiết bị Y tế",
+  "type": "page",
+  "version": "0.4",
+  "page_settings": {
+    "background_background": "classic",
+    "background_color": "#1a1a2e"
+  },
+  "content": [
+    {
+      "elType": "section",
+      "settings": {
+        "layout": "boxed",
+        "structure": "20",
+        "height": "min-height",
+        "custom_height": {"unit": "vh", "size": 100},
+        "background_background": "gradient",
+        "background_color": "#667eea",
+        "background_color_b": "#764ba2",
+        "background_gradient_angle": {"unit": "deg", "size": 135},
+        "content_position": "middle",
+        "padding": {"unit": "px", "top": 80, "right": 30, "bottom": 80, "left": 30}
+      },
+      "elements": [
+        {
+          "elType": "column",
+          "settings": {"_column_size": 50, "content_position": "center", "padding": {"unit": "px", "top": 0, "right": 30, "bottom": 0, "left": 0}},
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "image",
+              "settings": {
+                "image": {"url": "{{URL_HERO_IMAGE}}", "id": ""},
+                "image_size": "full",
+                "align": "center",
+                "width": {"unit": "%", "size": 100},
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 0, "left": 0}
+              }
+            }
+          ]
+        },
+        {
+          "elType": "column",
+          "settings": {"_column_size": 50, "content_position": "center", "padding": {"unit": "px", "top": 0, "right": 0, "bottom": 0, "left": 30}},
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "🏥 Hệ thống Quản lý Thiết bị Y tế",
+                "align": "left",
+                "title_color": "#FFFFFF",
+                "typography_typography": "custom",
+                "typography_font_family": "Inter",
+                "typography_font_size": {"unit": "px", "size": 42},
+                "typography_font_weight": "700",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 25, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Giải pháp quản lý thiết bị y tế thông minh dành cho bệnh viện và phòng khám. Miễn phí, dễ sử dụng, triển khai nhanh chóng.",
+                "header_size": "h3",
+                "align": "left",
+                "title_color": "#e0e7ff",
+                "typography_typography": "custom",
+                "typography_font_size": {"unit": "px", "size": 18},
+                "typography_font_weight": "400",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 35, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "button",
+              "settings": {
+                "text": "📥 Tải về miễn phí",
+                "link": {"url": "#download", "is_external": false},
+                "align": "left",
+                "background_color": "#FFFFFF",
+                "button_text_color": "#667eea",
+                "border_radius": {"unit": "px", "size": 50},
+                "typography_typography": "custom",
+                "typography_font_size": {"unit": "px", "size": 17},
+                "typography_font_weight": "600",
+                "button_padding": {"unit": "px", "top": 18, "right": 45, "bottom": 18, "left": 45}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "elType": "section",
+      "settings": {
+        "layout": "boxed",
+        "padding": {"unit": "px", "top": 80, "right": 30, "bottom": 40, "left": 30},
+        "background_color": "#16213e"
+      },
+      "elements": [
+        {
+          "elType": "column",
+          "settings": {"_column_size": 100},
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "✨ Tính năng nổi bật",
+                "align": "center",
+                "title_color": "#f9d423",
+                "typography_typography": "custom",
+                "typography_font_size": {"unit": "px", "size": 36},
+                "typography_font_weight": "700",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 50, "left": 0}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "elType": "section",
+      "settings": {
+        "layout": "boxed",
+        "structure": "40",
+        "padding": {"unit": "px", "top": 0, "right": 30, "bottom": 50, "left": 30},
+        "background_color": "#16213e"
+      },
+      "elements": [
+        {
+          "elType": "column",
+          "settings": {
+            "_column_size": 25,
+            "padding": {"unit": "px", "top": 35, "right": 25, "bottom": 35, "left": 25},
+            "_margin": {"unit": "px", "top": 0, "right": 10, "bottom": 0, "left": 10},
+            "background_background": "classic",
+            "background_color": "#1e293b",
+            "border_border": "solid",
+            "border_width": {"unit": "px", "top": 1, "right": 1, "bottom": 1, "left": 1},
+            "border_color": "#334155",
+            "border_radius": {"unit": "px", "top": 16, "right": 16, "bottom": 16, "left": 16}
+          },
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "📱 Quét mã QR",
+                "align": "center",
+                "title_color": "#ff6b9d",
+                "typography_font_size": {"unit": "px", "size": 20},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 15, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Nhận diện thiết bị nhanh chóng bằng mã QR. Dán mã lên thiết bị và quét để kiểm tra ngay.",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 14}
+              }
+            }
+          ]
+        },
+        {
+          "elType": "column",
+          "settings": {
+            "_column_size": 25,
+            "padding": {"unit": "px", "top": 35, "right": 25, "bottom": 35, "left": 25},
+            "_margin": {"unit": "px", "top": 0, "right": 10, "bottom": 0, "left": 10},
+            "background_background": "classic",
+            "background_color": "#1e293b",
+            "border_border": "solid",
+            "border_width": {"unit": "px", "top": 1, "right": 1, "bottom": 1, "left": 1},
+            "border_color": "#334155",
+            "border_radius": {"unit": "px", "top": 16, "right": 16, "bottom": 16, "left": 16}
+          },
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "📊 Dashboard trực quan",
+                "align": "center",
+                "title_color": "#4ecdc4",
+                "typography_font_size": {"unit": "px", "size": 20},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 15, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Biểu đồ thống kê dễ hiểu, theo dõi tình trạng thiết bị theo thời gian thực.",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 14}
+              }
+            }
+          ]
+        },
+        {
+          "elType": "column",
+          "settings": {
+            "_column_size": 25,
+            "padding": {"unit": "px", "top": 35, "right": 25, "bottom": 35, "left": 25},
+            "_margin": {"unit": "px", "top": 0, "right": 10, "bottom": 0, "left": 10},
+            "background_background": "classic",
+            "background_color": "#1e293b",
+            "border_border": "solid",
+            "border_width": {"unit": "px", "top": 1, "right": 1, "bottom": 1, "left": 1},
+            "border_color": "#334155",
+            "border_radius": {"unit": "px", "top": 16, "right": 16, "bottom": 16, "left": 16}
+          },
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "🔔 Thông báo Zalo",
+                "align": "center",
+                "title_color": "#feca57",
+                "typography_font_size": {"unit": "px", "size": 20},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 15, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Nhận cảnh báo ngay lập tức qua Zalo khi thiết bị gặp sự cố.",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 14}
+              }
+            }
+          ]
+        },
+        {
+          "elType": "column",
+          "settings": {
+            "_column_size": 25,
+            "padding": {"unit": "px", "top": 35, "right": 25, "bottom": 35, "left": 25},
+            "_margin": {"unit": "px", "top": 0, "right": 10, "bottom": 0, "left": 10},
+            "background_background": "classic",
+            "background_color": "#1e293b",
+            "border_border": "solid",
+            "border_width": {"unit": "px", "top": 1, "right": 1, "bottom": 1, "left": 1},
+            "border_color": "#334155",
+            "border_radius": {"unit": "px", "top": 16, "right": 16, "bottom": 16, "left": 16}
+          },
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "💾 Dữ liệu Offline",
+                "align": "center",
+                "title_color": "#00d9ff",
+                "typography_font_size": {"unit": "px", "size": 20},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 15, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Dữ liệu lưu trữ cục bộ tại máy tính của bạn, không cần kết nối internet.",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 14}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "elType": "section",
+      "settings": {
+        "layout": "boxed",
+        "structure": "40",
+        "padding": {"unit": "px", "top": 0, "right": 30, "bottom": 80, "left": 30},
+        "background_color": "#16213e"
+      },
+      "elements": [
+        {
+          "elType": "column",
+          "settings": {
+            "_column_size": 25,
+            "padding": {"unit": "px", "top": 35, "right": 25, "bottom": 35, "left": 25},
+            "_margin": {"unit": "px", "top": 0, "right": 10, "bottom": 0, "left": 10},
+            "background_background": "classic",
+            "background_color": "#1e293b",
+            "border_border": "solid",
+            "border_width": {"unit": "px", "top": 1, "right": 1, "bottom": 1, "left": 1},
+            "border_color": "#334155",
+            "border_radius": {"unit": "px", "top": 16, "right": 16, "bottom": 16, "left": 16}
+          },
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "🌐 Miễn phí tên miền",
+                "align": "center",
+                "title_color": "#a29bfe",
+                "typography_font_size": {"unit": "px", "size": 20},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 15, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Truy cập online miễn phí qua tên miền được cấp sẵn, không tốn chi phí hosting.",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 14}
+              }
+            }
+          ]
+        },
+        {
+          "elType": "column",
+          "settings": {
+            "_column_size": 25,
+            "padding": {"unit": "px", "top": 35, "right": 25, "bottom": 35, "left": 25},
+            "_margin": {"unit": "px", "top": 0, "right": 10, "bottom": 0, "left": 10},
+            "background_background": "classic",
+            "background_color": "#1e293b",
+            "border_border": "solid",
+            "border_width": {"unit": "px", "top": 1, "right": 1, "bottom": 1, "left": 1},
+            "border_color": "#334155",
+            "border_radius": {"unit": "px", "top": 16, "right": 16, "bottom": 16, "left": 16}
+          },
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "🌙 Chế độ tối",
+                "align": "center",
+                "title_color": "#74b9ff",
+                "typography_font_size": {"unit": "px", "size": 20},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 15, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Giao diện sáng/tối tùy chọn, bảo vệ mắt khi làm việc ban đêm.",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 14}
+              }
+            }
+          ]
+        },
+        {
+          "elType": "column",
+          "settings": {
+            "_column_size": 25,
+            "padding": {"unit": "px", "top": 35, "right": 25, "bottom": 35, "left": 25},
+            "_margin": {"unit": "px", "top": 0, "right": 10, "bottom": 0, "left": 10},
+            "background_background": "classic",
+            "background_color": "#1e293b",
+            "border_border": "solid",
+            "border_width": {"unit": "px", "top": 1, "right": 1, "bottom": 1, "left": 1},
+            "border_color": "#334155",
+            "border_radius": {"unit": "px", "top": 16, "right": 16, "bottom": 16, "left": 16}
+          },
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "📱 Responsive",
+                "align": "center",
+                "title_color": "#fd79a8",
+                "typography_font_size": {"unit": "px", "size": 20},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 15, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Sử dụng tốt trên điện thoại, máy tính bảng và máy tính để bàn.",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 14}
+              }
+            }
+          ]
+        },
+        {
+          "elType": "column",
+          "settings": {
+            "_column_size": 25,
+            "padding": {"unit": "px", "top": 35, "right": 25, "bottom": 35, "left": 25},
+            "_margin": {"unit": "px", "top": 0, "right": 10, "bottom": 0, "left": 10},
+            "background_background": "classic",
+            "background_color": "#1e293b",
+            "border_border": "solid",
+            "border_width": {"unit": "px", "top": 1, "right": 1, "bottom": 1, "left": 1},
+            "border_color": "#334155",
+            "border_radius": {"unit": "px", "top": 16, "right": 16, "bottom": 16, "left": 16}
+          },
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "🔒 Phân quyền rõ ràng",
+                "align": "center",
+                "title_color": "#55efc4",
+                "typography_font_size": {"unit": "px", "size": 20},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 15, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "4 cấp quyền: Admin, Kiểm tra viên, Kỹ thuật viên, Người xem.",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 14}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "elType": "section",
+      "settings": {
+        "layout": "boxed",
+        "padding": {"unit": "px", "top": 80, "right": 30, "bottom": 40, "left": 30},
+        "background_color": "#1a1a2e"
+      },
+      "elements": [
+        {
+          "elType": "column",
+          "settings": {"_column_size": 100},
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "🚀 Hướng dẫn sử dụng",
+                "align": "center",
+                "title_color": "#f9d423",
+                "typography_font_size": {"unit": "px", "size": 36},
+                "typography_font_weight": "700",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 50, "left": 0}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "elType": "section",
+      "settings": {
+        "layout": "boxed",
+        "structure": "40",
+        "padding": {"unit": "px", "top": 0, "right": 30, "bottom": 80, "left": 30},
+        "background_color": "#1a1a2e"
+      },
+      "elements": [
+        {
+          "elType": "column",
+          "settings": {"_column_size": 25, "padding": {"unit": "px", "top": 25, "right": 20, "bottom": 25, "left": 20}},
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "① Thêm thiết bị",
+                "align": "center",
+                "title_color": "#ff6b9d",
+                "typography_font_size": {"unit": "px", "size": 20},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 15, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Nhập thông tin thiết bị: Tên, Model, Vị trí, Khoa phòng",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 14}
+              }
+            }
+          ]
+        },
+        {
+          "elType": "column",
+          "settings": {"_column_size": 25, "padding": {"unit": "px", "top": 25, "right": 20, "bottom": 25, "left": 20}},
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "② In mã QR",
+                "align": "center",
+                "title_color": "#4ecdc4",
+                "typography_font_size": {"unit": "px", "size": 20},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 15, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "In và dán mã QR lên thiết bị để nhận diện nhanh",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 14}
+              }
+            }
+          ]
+        },
+        {
+          "elType": "column",
+          "settings": {"_column_size": 25, "padding": {"unit": "px", "top": 25, "right": 20, "bottom": 25, "left": 20}},
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "③ Kiểm tra hàng ngày",
+                "align": "center",
+                "title_color": "#feca57",
+                "typography_font_size": {"unit": "px", "size": 20},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 15, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Quét QR và ghi nhận trạng thái thiết bị",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 14}
+              }
+            }
+          ]
+        },
+        {
+          "elType": "column",
+          "settings": {"_column_size": 25, "padding": {"unit": "px", "top": 25, "right": 20, "bottom": 25, "left": 20}},
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "④ Xem báo cáo",
+                "align": "center",
+                "title_color": "#a29bfe",
+                "typography_font_size": {"unit": "px", "size": 20},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 15, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Dashboard thống kê và lịch sử kiểm tra chi tiết",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 14}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "elType": "section",
+      "id": "download",
+      "settings": {
+        "layout": "full_width",
+        "padding": {"unit": "px", "top": 100, "right": 30, "bottom": 100, "left": 30},
+        "background_background": "gradient",
+        "background_color": "#667eea",
+        "background_color_b": "#764ba2",
+        "background_gradient_angle": {"unit": "deg", "size": 135}
+      },
+      "elements": [
+        {
+          "elType": "column",
+          "settings": {"_column_size": 100},
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "📥 Tải về & Cài đặt",
+                "align": "center",
+                "title_color": "#FFFFFF",
+                "typography_font_size": {"unit": "px", "size": 40},
+                "typography_font_weight": "700",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 25, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Tải file cài đặt và sử dụng ngay. Hoàn toàn miễn phí!",
+                "header_size": "h3",
+                "align": "center",
+                "title_color": "#e0e7ff",
+                "typography_font_size": {"unit": "px", "size": 20},
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 40, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "button",
+              "settings": {
+                "text": "💻 Tải bản cài đặt Setup.exe",
+                "link": {"url": "{{URL_SETUP_EXE}}", "is_external": true},
+                "align": "center",
+                "background_color": "#FFFFFF",
+                "button_text_color": "#667eea",
+                "border_radius": {"unit": "px", "size": 50},
+                "typography_typography": "custom",
+                "typography_font_size": {"unit": "px", "size": 18},
+                "typography_font_weight": "600",
+                "button_padding": {"unit": "px", "top": 22, "right": 55, "bottom": 22, "left": 55},
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 25, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Dành cho cài đặt cố định trên máy tính Windows. Tự động thêm shortcut và khởi động cùng Windows.",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#c7d2fe",
+                "typography_font_size": {"unit": "px", "size": 15}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "elType": "section",
+      "settings": {
+        "layout": "boxed",
+        "padding": {"unit": "px", "top": 80, "right": 30, "bottom": 40, "left": 30},
+        "background_color": "#0f0f23"
+      },
+      "elements": [
+        {
+          "elType": "column",
+          "settings": {"_column_size": 100},
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "❓ Câu hỏi thường gặp",
+                "align": "center",
+                "title_color": "#f9d423",
+                "typography_font_size": {"unit": "px", "size": 34},
+                "typography_font_weight": "700",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 50, "left": 0}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "elType": "section",
+      "settings": {
+        "layout": "boxed",
+        "structure": "20",
+        "padding": {"unit": "px", "top": 0, "right": 30, "bottom": 80, "left": 30},
+        "background_color": "#0f0f23"
+      },
+      "elements": [
+        {
+          "elType": "column",
+          "settings": {"_column_size": 50, "padding": {"unit": "px", "top": 0, "right": 30, "bottom": 0, "left": 0}},
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Ứng dụng có miễn phí không?",
+                "align": "left",
+                "title_color": "#a29bfe",
+                "typography_font_size": {"unit": "px", "size": 18},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 10, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Có, ứng dụng hoàn toàn miễn phí và mã nguồn mở.",
+                "header_size": "p",
+                "align": "left",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 15},
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 35, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Dữ liệu có an toàn không?",
+                "align": "left",
+                "title_color": "#a29bfe",
+                "typography_font_size": {"unit": "px", "size": 18},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 10, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Dữ liệu được lưu trữ cục bộ trên máy tính của bạn, không chia sẻ với bên thứ ba.",
+                "header_size": "p",
+                "align": "left",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 15}
+              }
+            }
+          ]
+        },
+        {
+          "elType": "column",
+          "settings": {"_column_size": 50, "padding": {"unit": "px", "top": 0, "right": 0, "bottom": 0, "left": 30}},
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Cần hỗ trợ kỹ thuật thì làm sao?",
+                "align": "left",
+                "title_color": "#a29bfe",
+                "typography_font_size": {"unit": "px", "size": 18},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 10, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Liên hệ qua GitHub Issues hoặc gửi email cho nhà phát triển.",
+                "header_size": "p",
+                "align": "left",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 15},
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 35, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Có thể triển khai lên cloud không?",
+                "align": "left",
+                "title_color": "#a29bfe",
+                "typography_font_size": {"unit": "px", "size": 18},
+                "typography_font_weight": "600",
+                "_margin": {"unit": "px", "top": 0, "right": 0, "bottom": 10, "left": 0}
+              }
+            },
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Có! Hỗ trợ triển khai lên Railway hoặc Render với nút deploy một click.",
+                "header_size": "p",
+                "align": "left",
+                "title_color": "#a0aec0",
+                "typography_font_size": {"unit": "px", "size": 15}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "elType": "section",
+      "settings": {
+        "layout": "full_width",
+        "padding": {"unit": "px", "top": 30, "right": 30, "bottom": 30, "left": 30},
+        "background_color": "#0a0a1a"
+      },
+      "elements": [
+        {
+          "elType": "column",
+          "settings": {"_column_size": 100},
+          "elements": [
+            {
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "© 2026 Hệ thống Quản lý Thiết bị Y tế | GitHub",
+                "header_size": "p",
+                "align": "center",
+                "title_color": "#64748b",
+                "typography_font_size": {"unit": "px", "size": 14}
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

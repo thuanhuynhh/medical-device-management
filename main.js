@@ -3,7 +3,7 @@
  * Wraps Express server with native system tray support
  */
 
-const { app, BrowserWindow, Tray, Menu, shell, dialog } = require('electron');
+const { app, BrowserWindow, Tray, Menu, shell, dialog, ipcMain } = require('electron');
 const path = require('path');
 const { spawn, exec } = require('child_process');
 const fs = require('fs');
@@ -20,10 +20,13 @@ const APP_NAME = 'Quan ly thiet bi y te - VICAS.vn';
 
 // State
 let mainWindow = null;
+let logWindow = null;
 let tray = null;
 let serverProcess = null;
 let isQuitting = false;
 let tunnelUrl = null;
+let serverLogs = [];
+const MAX_LOG_LINES = 1000;
 
 // Get icon path
 function getIconPath() {
@@ -48,12 +51,82 @@ function getIconPath() {
   return null;
 }
 
+// Log file config
+const MAX_LOG_SIZE = 10 * 1024 * 1024; // 10MB
+
+function getLogPath() {
+  const baseDir = app.isPackaged ? path.dirname(process.execPath) : __dirname;
+  return path.join(baseDir, 'logs', 'app.log');
+}
+
+function logToFile(entry) {
+  try {
+    const logPath = getLogPath();
+    const logDir = path.dirname(logPath);
+    
+    // Ensure directory exists
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
+
+    // Check size and rotate if needed
+    if (fs.existsSync(logPath)) {
+      const stats = fs.statSync(logPath);
+      if (stats.size >= MAX_LOG_SIZE) {
+        const backupPath = logPath + '.old';
+        try {
+          if (fs.existsSync(backupPath)) {
+            fs.unlinkSync(backupPath);
+          }
+          fs.renameSync(logPath, backupPath);
+        } catch (e) {
+          console.error('Failed to rotate log:', e);
+        }
+      }
+    }
+
+    // Append to file
+    fs.appendFileSync(logPath, entry + '\n', 'utf8');
+  } catch (e) {
+    console.error('Failed to write to log file:', e);
+  }
+}
+
+function addLog(message, type = 'info') {
+  const timestamp = new Date().toLocaleString();
+  const logEntry = `[${timestamp}] [${type.toUpperCase()}] ${message}`;
+  
+  // Write to file
+  logToFile(logEntry);
+  
+  // Storage in memory
+  serverLogs.push(logEntry);
+  if (serverLogs.length > MAX_LOG_LINES) {
+    serverLogs.shift();
+  }
+  
+  // Send to log window if open
+  if (logWindow && !logWindow.isDestroyed()) {
+    logWindow.webContents.send('new-log', logEntry);
+  }
+}
+
 // Start Express server
 function startServer() {
   return new Promise((resolve, reject) => {
+    // Kill existing if any
+    if (serverProcess) {
+      try {
+        process.kill(serverProcess.pid);
+      } catch (e) {
+        // Ignore
+      }
+      serverProcess = null;
+    }
+
     const serverPath = path.join(__dirname, 'server.js');
     
-    console.log('Starting Express server...');
+    addLog('Starting Express server...', 'info');
     
     serverProcess = spawn(process.execPath, [serverPath], {
       cwd: __dirname,
@@ -68,7 +141,7 @@ function startServer() {
     
     serverProcess.stdout.on('data', (data) => {
       const output = data.toString();
-      console.log('[Server]', output.trim());
+      addLog(output.trim(), 'stdout');
       
       // Check for server ready signal
       if (output.includes('Server is ready') || output.includes('localhost:' + PORT)) {
@@ -87,19 +160,18 @@ function startServer() {
     });
     
     serverProcess.stderr.on('data', (data) => {
-      console.error('[Server Error]', data.toString().trim());
+      addLog(data.toString().trim(), 'stderr');
     });
     
     serverProcess.on('error', (err) => {
-      console.error('Failed to start server:', err);
+      addLog('Failed to start server: ' + err.message, 'error');
       reject(err);
     });
     
     serverProcess.on('exit', (code) => {
-      console.log('Server exited with code:', code);
-      if (!isQuitting) {
-        dialog.showErrorBox('Server Error', 'Server đã dừng bất ngờ. Ứng dụng sẽ đóng.');
-        app.quit();
+      addLog('Server exited with code: ' + code, 'warn');
+      if (!isQuitting && code !== 0 && code !== null) {
+        // dialog.showErrorBox('Server Error', 'Server đã dừng bất ngờ.');
       }
     });
     
@@ -112,12 +184,34 @@ function startServer() {
   });
 }
 
+// Restart server
+async function restartServer() {
+  addLog('Restarting server...', 'info');
+  stopServer();
+  // Wait a bit
+  setTimeout(async () => {
+    try {
+      await startServer();
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Thành công',
+        message: 'Đã khởi động lại server thành công',
+        buttons: ['OK']
+      });
+    } catch (err) {
+      dialog.showErrorBox('Lỗi', 'Không thể khởi động lại server: ' + err.message);
+    }
+  }, 1000);
+}
+
 // Stop server
 function stopServer() {
   if (serverProcess) {
-    console.log('Stopping server...');
+    addLog('Stopping server...', 'info');
     serverProcess.kill('SIGTERM');
     serverProcess = null;
+    tunnelUrl = null;
+    updateTrayMenu();
   }
 }
 
@@ -155,6 +249,83 @@ function toggleStartup() {
   }
 }
 
+// Create log window
+function createLogWindow() {
+  if (logWindow && !logWindow.isDestroyed()) {
+    logWindow.show();
+    logWindow.focus();
+    return;
+  }
+
+  logWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    title: 'Server Logs',
+    icon: getIconPath(),
+    autoHideMenuBar: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  });
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Server Logs</title>
+      <style>
+        body { background: #1e1e1e; color: #d4d4d4; font-family: Consolas, monospace; padding: 10px; margin: 0; }
+        #logs { white-space: pre-wrap; word-wrap: break-word; }
+        .log-entry { margin-bottom: 2px; border-bottom: 1px solid #333; padding: 2px 0; }
+        .stderr { color: #f48771; }
+        .error { color: #f44336; font-weight: bold; }
+        .warn { color: #cca700; }
+        .info { color: #89d185; }
+        .stdout { color: #d4d4d4; }
+      </style>
+    </head>
+    <body>
+      <div id="logs"></div>
+      <script>
+        const { ipcRenderer } = require('electron');
+        const logsDiv = document.getElementById('logs');
+        
+        function addLog(msg) {
+          const div = document.createElement('div');
+          div.className = 'log-entry';
+          
+          if(msg.includes('[STDERR]')) div.classList.add('stderr');
+          else if(msg.includes('[ERROR]')) div.classList.add('error');
+          else if(msg.includes('[WARN]')) div.classList.add('warn');
+          else if(msg.includes('[INFO]')) div.classList.add('info');
+          else div.classList.add('stdout');
+          
+          div.textContent = msg;
+          logsDiv.appendChild(div);
+          window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        // Load history
+        const history = ${JSON.stringify(serverLogs)};
+        history.forEach(addLog);
+
+        ipcRenderer.on('new-log', (event, msg) => {
+          addLog(msg);
+        });
+      </script>
+    </body>
+    </html>
+  `;
+
+  logWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(htmlContent));
+
+  logWindow.on('closed', () => {
+    logWindow = null;
+  });
+}
+
+
 // Create tray menu
 function createTrayMenu() {
   const startupEnabled = isStartupEnabled();
@@ -173,6 +344,31 @@ function createTrayMenu() {
         if (tunnelUrl) {
           shell.openExternal(tunnelUrl);
         }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: '📋 Xem Log Server',
+      click: () => {
+        createLogWindow();
+      }
+    },
+    {
+      label: '🔄 Khởi động lại Server',
+      click: () => {
+        // Confirmation
+        dialog.showMessageBox({
+            type: 'question',
+            buttons: ['Hủy', 'Khởi động lại'],
+            title: 'Xác nhận',
+            message: 'Bạn có chắc chắn muốn khởi động lại server không?',
+            defaultId: 0,
+            cancelId: 0
+        }).then(result => {
+            if (result.response === 1) {
+                restartServer();
+            }
+        });
       }
     },
     { type: 'separator' },
@@ -199,8 +395,20 @@ function createTrayMenu() {
     {
       label: '🚪 Thoát',
       click: () => {
-        isQuitting = true;
-        app.quit();
+        // Confirm exit
+        dialog.showMessageBox({
+          type: 'question',
+          buttons: ['Hủy', 'Thoát'],
+          title: 'Xác nhận',
+          message: 'Bạn có chắc chắn muốn thoát ứng dụng không?\nServer sẽ bị dừng.',
+          defaultId: 0,
+          cancelId: 0
+      }).then(result => {
+          if (result.response === 1) {
+              isQuitting = true;
+              app.quit();
+          }
+      });
       }
     }
   ]);
@@ -259,6 +467,10 @@ function createWindow() {
 app.whenReady().then(async () => {
   console.log('Electron starting...');
   
+  // Create tray and window
+  createTray();
+  createWindow();
+  
   // Start server first
   try {
     await startServer();
@@ -266,10 +478,6 @@ app.whenReady().then(async () => {
   } catch (err) {
     console.error('Failed to start server:', err);
   }
-  
-  // Create tray and window
-  createTray();
-  createWindow();
   
   // Open browser on first run - check if setup is needed
   setTimeout(async () => {

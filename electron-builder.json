@@ -7,6 +7,7 @@
   "files": [
     "main.js",
     "server.js",
+    "seed-data.js",
     "zalobot.js",
     "public/**/*",
     "node_modules/**/*",

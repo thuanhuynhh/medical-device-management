@@ -89,7 +89,7 @@ function getTokenMasked() {
 async function sendMessage(chatId, text) {
   const apiUrl = getApiUrl();
   if (!apiUrl) {
-    console.log('⚠️ Zalo: Bot chưa cấu hình token');
+    // console.log('⚠️ Zalo: Bot chưa cấu hình token');
     return null;
   }
   try {
@@ -117,7 +117,7 @@ async function sendMessage(chatId, text) {
 async function testConnection() {
   const apiUrl = getApiUrl();
   if (!apiUrl) {
-    console.log('⚠️ Zalo: Bot chưa cấu hình token');
+    // console.log('⚠️ Zalo: Bot chưa cấu hình token');
     return null;
   }
   try {

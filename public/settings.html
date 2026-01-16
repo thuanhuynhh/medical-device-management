@@ -93,7 +93,7 @@
             <div class="form-group" style="margin-bottom: 12px;">
               <label class="form-label">Zalo Bot Token</label>
               <input type="text" class="form-control" id="zaloToken" placeholder="Nhập token Zalo Bot">
-              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Token lấy từ Zalo OA Dashboard</p>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Vào Zalo Bot Manager. Tạo Bot và dán Token lấy từ Bot của bạn vào đây</p>
             </div>
             <div style="display: flex; gap: 8px;">
               <button class="btn btn-primary" onclick="saveZaloToken()">
@@ -125,16 +125,19 @@
               </h3>
             </div>
             <div class="form-group" style="margin-bottom: 12px;">
-              <label class="form-label">Domain URL (cho QR Code & Zalo)</label>
-              <input type="text" class="form-control" id="domainUrl" placeholder="https://your-domain.com">
-              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">URL này sẽ được nhúng vào mã QR và gửi ảnh qua Zalo Bot</p>
+              <label class="form-label">Subdomain nport (tên miền phụ)</label>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="text" class="form-control" id="tunnelSubdomain" placeholder="vicas-xxxxxx">
+                <span style="color: var(--text-muted); white-space: nowrap;">.nport.link</span>
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Điền tên miền phụ bạn muốn sử dụng (ví dụ: benhvien-a), bỏ trống để tự động tạo.</p>
             </div>
-            <button class="btn btn-primary" onclick="saveDomainUrl()">
+            <button class="btn btn-primary" onclick="saveSubdomain()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                 <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
                 <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
               </svg>
-              Lưu cấu hình
+              Lưu & Khởi động lại Tunnel
             </button>
           </div>
           
@@ -276,19 +279,19 @@
     async function loadSystemConfig() {
       try {
         const config = await API.get('/api/config');
-        if (config.domain_url) {
-          document.getElementById('domainUrl').value = config.domain_url;
+        if (config.tunnel_subdomain) {
+          document.getElementById('tunnelSubdomain').value = config.tunnel_subdomain;
         }
       } catch (e) {
         console.error('Error loading config:', e);
       }
     }
     
-    async function saveDomainUrl() {
-      const domainUrl = document.getElementById('domainUrl').value.trim();
+    async function saveSubdomain() {
+      const subdomain = document.getElementById('tunnelSubdomain').value.trim();
       try {
-        await API.post('/api/config', { entries: [{ key: 'domain_url', value: domainUrl }] });
-        Toast.success('Đã lưu cấu hình!');
+        await API.post('/api/config', { entries: [{ key: 'tunnel_subdomain', value: subdomain }] });
+        Toast.success('Đã lưu cấu hình! Vui lòng khởi động lại ứng dụng để áp dụng.');
       } catch (e) {
         Toast.error('Lỗi lưu cấu hình: ' + e.message);
       }
